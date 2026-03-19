@@ -1,5 +1,7 @@
 package com.finalyear.liwatch.userprofile;
 
+import com.finalyear.liwatch.userManagement.model.User;
+import com.finalyear.liwatch.userprofile.enums.BadgeLevel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,8 +20,6 @@ public class UserProfile {
     @Column(name = "profile_id")
     private Long profileId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
 
     @Column(name = "location", nullable = false, length = 100)
     private String location;
@@ -36,9 +36,8 @@ public class UserProfile {
 
     @Column(name = "profile_image", length = 255)
     private String profileImage;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    public enum BadgeLevel {
-        NEW,
-        TRUSTED
-    }
 }

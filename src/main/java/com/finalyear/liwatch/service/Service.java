@@ -1,25 +1,21 @@
 package com.finalyear.liwatch.service;
 
 
+import com.finalyear.liwatch.Post.Post;
 import com.finalyear.liwatch.service.enumservice.SkillLevel;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "services")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Service {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "service_id")
-    private Long serviceId;
-
-    @Column(name = "post_id", nullable = false)
-    private Long postId;
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@DiscriminatorValue("service")
+public class Service extends Post {
 
     @Column(name = "service_duration", nullable = false, length = 50)
     private String serviceDuration;

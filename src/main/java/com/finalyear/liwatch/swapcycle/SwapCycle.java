@@ -1,10 +1,13 @@
 package com.finalyear.liwatch.swapcycle;
 
+import com.finalyear.liwatch.swap_request.CycleSwapRequest;
 import com.finalyear.liwatch.swapcycle.enum_swapcycle.Status;
+import com.finalyear.liwatch.swapcycle_agreement.CycleAgreement;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "swap_cycles")
@@ -12,21 +15,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class SwapCycle {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "swap_cycle_id")
-    private Long swapCycleId;
+    @Id @GeneratedValue
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "request_id")
+    private CycleSwapRequest cycleRequest;
 
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(name = "created_at", nullable = false)
+    private Double fairnessScore;
+
     private LocalDateTime createdAt;
 
-    @Column(name = "fairness_score", precision = 3, scale = 2)
-    private BigDecimal fairnessScore;
-
-
+    @OneToMany(mappedBy = "swapCycle")
+    private List<CycleAgreement> agreements;
 }

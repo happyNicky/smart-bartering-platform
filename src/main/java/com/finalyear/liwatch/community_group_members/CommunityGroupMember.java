@@ -3,6 +3,7 @@ package com.finalyear.liwatch.community_group_members;
 
 
 import com.finalyear.liwatch.community_group_members.cg_enums.Role;
+import com.finalyear.liwatch.community_group_members.cg_enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

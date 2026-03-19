@@ -1,9 +1,13 @@
 package com.finalyear.liwatch.negotiation;
 
 
+import com.finalyear.liwatch.barter.Barter;
+import com.finalyear.liwatch.chat.Chat;
+import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "negotiations")
@@ -13,21 +17,21 @@ import java.math.BigDecimal;
 @Builder
 public class Negotiation {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "negotiation_id")
-    private Long negotiationId;
+    @Id @GeneratedValue
+    private Long id;
 
-    @Column(name = "barter_id")
-    private Long barterId;
+    @OneToOne
+    @JoinColumn(name = "barter_id")
+    private Barter barter;
 
-    @Column(name = "fairness_score", precision = 3, scale = 2)
-    private BigDecimal fairnessScore;
+    private Double fairnessScore;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private NegotiationStatus status;
 
-    public enum Status {
-        ACTIVE
-    }
+    // 🔹 One negotiation → many messages
+    @OneToMany(mappedBy = "negotiation", cascade = CascadeType.ALL)
+    private List<Chat> messages;
+
+
 }

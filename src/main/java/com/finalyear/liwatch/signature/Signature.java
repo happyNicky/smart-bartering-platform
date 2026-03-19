@@ -1,6 +1,8 @@
 package com.finalyear.liwatch.signature;
 
 
+import com.finalyear.liwatch.digitalagreement.DigitalAgreement;
+import com.finalyear.liwatch.userManagement.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -13,16 +15,15 @@ import java.time.LocalDateTime;
 @Builder
 public class Signature {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "signature_id")
-    private Long signatureId;
 
-    @Column(name = "agreement_id", nullable = false)
-    private Long agreementId;
+    @Id @GeneratedValue
+    private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne
+    private DigitalAgreement agreement;
+
+    @ManyToOne
+    private User user;
 
     @Column(name = "signature_hash", nullable = false, length = 255)
     private String signatureHash;

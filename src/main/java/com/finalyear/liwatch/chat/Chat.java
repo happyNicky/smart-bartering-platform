@@ -1,5 +1,7 @@
 package com.finalyear.liwatch.chat;
 
+import com.finalyear.liwatch.negotiation.Negotiation;
+import com.finalyear.liwatch.userManagement.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -12,23 +14,21 @@ import java.time.LocalDateTime;
 @Builder
 public class Chat {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_id")
-    private Long messageId;
+    @Id @GeneratedValue
+    private Long id;
 
-    @Column(name = "negotiation_id", nullable = false)
-    private Long negotiationId;
+    @ManyToOne
+    private Negotiation negotiation;
 
-    @Column(name = "sender_id", nullable = false)
-    private Long senderId;
+    @ManyToOne
+    private User sender;
 
-    @Column(name = "message_text", nullable = false, columnDefinition = "TEXT")
+
+
+    @Column(columnDefinition = "TEXT")
     private String messageText;
 
-    @Column(name = "is_encrypted")
-    private Boolean isEncrypted = true;
+    private boolean isEncrypted;
 
-    @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
 }

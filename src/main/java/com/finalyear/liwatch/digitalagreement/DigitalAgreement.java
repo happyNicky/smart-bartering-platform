@@ -1,11 +1,14 @@
 package com.finalyear.liwatch.digitalagreement;
 
 
+import com.finalyear.liwatch.barter.Barter;
 import com.finalyear.liwatch.digitalagreement.enum_agreement.AgreementType;
 import com.finalyear.liwatch.digitalagreement.enum_agreement.Status;
+import com.finalyear.liwatch.signature.Signature;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "digital_agreements")
@@ -15,17 +18,17 @@ import java.time.LocalDateTime;
 @Builder
 public class DigitalAgreement {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "agreement_id")
-    private Long agreementId;
+    @Id @GeneratedValue
+    private Long id;
 
-    @Column(name = "barter_id", nullable = false)
-    private Long barterId;
+    @ManyToOne
+    private Barter barter;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "agreement_type")
-    private AgreementType agreementType;
+    private AgreementType type;
+
+    @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL)
+    private List<Signature> signatures;
 
     @Enumerated(EnumType.STRING)
     private Status status;
