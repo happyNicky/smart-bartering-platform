@@ -8,7 +8,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -22,10 +24,18 @@ public class OauthUserController {
     }
 
     @GetMapping("/success")
-    public ResponseEntity<?> oauth2LoginSuccess(@AuthenticationPrincipal OAuth2User oAuth2User) {
+    public void oauth2LoginSuccess(
+            @AuthenticationPrincipal OAuth2User oAuth2User,
+            HttpServletResponse response
+    ) throws IOException {
 
         String email = oAuth2User.getAttribute("email");
         String token = jwtService.generateToken(email);
-        return ResponseEntity.ok(Map.of("token", token));
+
+        // construct the frontend URL
+        String frontendCallbackUrl = "http://localhost:3000/auth/callback?token=" + token;
+
+        // redirect the user's browser back to next.js app
+        response.sendRedirect(frontendCallbackUrl);
     }
 }
