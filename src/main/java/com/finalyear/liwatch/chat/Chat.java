@@ -23,8 +23,6 @@ public class Chat {
     @ManyToOne
     private User sender;
 
-
-
     @Column(columnDefinition = "TEXT")
     private String messageText;
 

@@ -29,7 +29,7 @@ public class Negotiation {
     @Enumerated(EnumType.STRING)
     private NegotiationStatus status;
 
-    // 🔹 One negotiation → many messages
+    //  One negotiation → many messages
     @OneToMany(mappedBy = "negotiation", cascade = CascadeType.ALL)
     private List<Chat> messages;
 
