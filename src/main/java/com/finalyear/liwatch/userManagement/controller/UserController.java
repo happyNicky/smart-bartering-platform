@@ -25,6 +25,11 @@ public class UserController {
         return "welcome";
     }
 
+    @PostMapping("/post")
+    public String checkPost(@RequestBody String name){
+        return "this is my name :"+name;
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterUserDto dto) {
         try {
