@@ -1,5 +1,6 @@
 package com.finalyear.liwatch.Post;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.finalyear.liwatch.Post.enums.ExchangeType;
 import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.directswap.DirectSwapRequest;

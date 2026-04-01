@@ -40,7 +40,7 @@ public class WebSecurityConfig {
         httpSecurity
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify").permitAll()
+                                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify","/error").permitAll()
                                 .anyRequest().authenticated()
                 )
 

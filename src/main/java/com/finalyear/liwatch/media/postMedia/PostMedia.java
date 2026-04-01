@@ -1,5 +1,6 @@
 package com.finalyear.liwatch.media.postMedia;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.finalyear.liwatch.Post.Post;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,6 +25,7 @@ public class PostMedia {
     private String postImageUrl;
 
     @ManyToOne
+
     @JoinColumn(name = "post",nullable = false)
     private Post post;
 }
