@@ -32,8 +32,11 @@ public class Item extends Post {
     @Column(name = "estimated_value", precision = 10, scale = 2)
     private BigDecimal estimatedValue;
 
-    @Column(name = "partial_cash_allowed")
+    @Column(name = "partial_cash_allowed",nullable = false)
     private Boolean partialCashAllowed = false;
 
-
+    // one-to-one relationship with post
+//    @OneToOne
+//    @JoinColumn(name = "post_id", nullable = false)
+//    private Post post;
 }

@@ -27,5 +27,10 @@ public class Service extends Post {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String availability;
 
+//    //one-to-one relationship with post
+//    @OneToOne
+//    @JoinColumn(name = "post_id", nullable = false)
+//    private Post post;
+
 
 }

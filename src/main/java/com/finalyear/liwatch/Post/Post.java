@@ -1,10 +1,13 @@
 package com.finalyear.liwatch.Post;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.finalyear.liwatch.Item.Item;
 import com.finalyear.liwatch.Post.enums.ExchangeType;
+import com.finalyear.liwatch.Post.enums.PostType;
 import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.directswap.DirectSwapRequest;
 import com.finalyear.liwatch.media.postMedia.PostMedia;
+import com.finalyear.liwatch.service.Service;
 import com.finalyear.liwatch.userManagement.model.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,7 +26,7 @@ import java.util.List;
 @AllArgsConstructor
 @SuperBuilder
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "post_type")
+
 public class Post {
 
     @Id
@@ -45,10 +48,14 @@ public class Post {
     protected ExchangeType exchangeType;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "post_type",nullable = false)
+    protected PostType postType;
+
+    @Enumerated(EnumType.STRING)
     protected Status status;
 
     @Column(name = "created_at", nullable = false)
-    protected LocalDateTime createdAt;
+    protected LocalDateTime createdAt=LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -62,4 +69,6 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval= true)
     private List<PostMedia> postImages= new ArrayList<>();
+
+
 }

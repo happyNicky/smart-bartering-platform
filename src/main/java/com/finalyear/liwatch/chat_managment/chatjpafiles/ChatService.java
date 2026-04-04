@@ -28,7 +28,7 @@ public class ChatService {
         Negotiation negotiation = negotiationRepository.findById(dto.getNegotiationId())
                 .orElseThrow();
 
-        User sender = userRepository.findById(dto.getSenderId())
+        User sender = userRepository.findById(Long.valueOf(dto.getSenderId()))
                 .orElseThrow();
 
         Chat chat = Chat.builder()
