@@ -54,6 +54,12 @@ public class Post {
     @Enumerated(EnumType.STRING)
     protected Status status;
 
+    @Column(name = "location")
+    protected String location;
+
+    @Column(name = "looking_for")
+    protected String lookingFor;
+
     @Column(name = "created_at", nullable = false)
     protected LocalDateTime createdAt=LocalDateTime.now();
 

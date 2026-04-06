@@ -33,6 +33,8 @@ public class PostUtilMethods {
         prd.setPostImages(postMediaDtosList);
         prd.setUser(usd);
         prd.setCreatedAt(post.getCreatedAt());
+        prd.setLocation(post.getLocation());
+        prd.setLookingFor(post.getLookingFor());
         return prd;
     }
 
@@ -49,6 +51,8 @@ public class PostUtilMethods {
         item.setExchangeType(postRequestDto.getExchangeType());
         item.setPostType(postRequestDto.getPostType());
         item.setCondition(postRequestDto.getItem().getCondition());
+        item.setLocation(postRequestDto.getLocation());
+        item.setLookingFor(postRequestDto.getLookingFor());
 
         item.setStatus(Status.ACTIVE);
 
@@ -69,6 +73,8 @@ public class PostUtilMethods {
         service.setExchangeType(postRequestDto.getExchangeType());
         service.setPostType(postRequestDto.getPostType());
         service.setStatus(Status.ACTIVE);
+        service.setLocation(postRequestDto.getLocation());
+        service.setLookingFor(postRequestDto.getLookingFor());
 
 
         service.setSkillLevel(postRequestDto.getService().getSkillLevel());

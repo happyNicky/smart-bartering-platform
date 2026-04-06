@@ -21,6 +21,8 @@ public class PostRequestDto {
     private String title;
     private String description;
     private String category;
+    private String location;
+    private String lookingFor;
     private PostType postType=PostType.ITEM;
     private ExchangeType exchangeType;
     private List<PostMediaDto> postImages;

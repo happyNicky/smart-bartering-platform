@@ -2,12 +2,13 @@ package com.finalyear.liwatch.userManagement.utils.classes;
 
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
-@Component
+import org.springframework.stereotype.Service;
+
+@Service
 public class UserUtilMethods {
 
     private final UserRepository userRepository;
@@ -15,6 +16,7 @@ public class UserUtilMethods {
     public UserUtilMethods(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
 
     public  User getCurrentlyAuthenticatedUser()
     {

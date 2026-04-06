@@ -249,7 +249,9 @@ public class PostService {
                     post.getCreatedAt(),
                     mediaDtos,
                     userDto,
-                    itemRequestDto
+                    itemRequestDto,
+                    post.getLocation(),
+                    post.getLookingFor()
 
             );
         } else {
@@ -268,7 +270,9 @@ public class PostService {
                     post.getCreatedAt(),
                     mediaDtos,
                     userDto,
-                    serviceRequestDto
+                    serviceRequestDto,
+                    post.getLocation(),
+                    post.getLookingFor()
 
             );
 
@@ -305,6 +309,8 @@ public class PostService {
         oldPost.setCategory(newPost.getCategory());
         oldPost.setExchangeType(newPost.getExchangeType());
         oldPost.setPostType(newPost.getPostType());
+        oldPost.setLocation(newPost.getLocation());
+        oldPost.setLookingFor(newPost.getLookingFor());
 
 
         // update the post item or service based on post type of new post

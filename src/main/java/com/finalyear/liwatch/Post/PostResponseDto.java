@@ -24,6 +24,8 @@ public class PostResponseDto {
     private String title;
     private String description;
     private String category;
+    private String location;
+    private String lookingFor;
     private ExchangeType exchangeType;
     private Status status;
     private PostType postType;
@@ -33,7 +35,7 @@ public class PostResponseDto {
     private ItemRequestDto item;
     private ServiceRequestDto service;
 
-    public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ItemRequestDto itemRequestDto) {
+    public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ItemRequestDto itemRequestDto,String location, String lookingFor) {
         this.postId = postId;
         this.title = title;
         this.description = description;
@@ -45,9 +47,11 @@ public class PostResponseDto {
         this.postImages=mediaDtos;
         this.user=userDto;
         this.item=itemRequestDto;
+        this.location=location;
+        this.lookingFor=lookingFor;
     }
 
-    public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ServiceRequestDto serviceRequestDto) {
+    public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ServiceRequestDto serviceRequestDto,String location, String lookingFor) {
         this.postId = postId;
         this.title = title;
         this.description = description;
@@ -59,5 +63,7 @@ public class PostResponseDto {
         this.postImages=mediaDtos;
         this.user=userDto;
         this.service=serviceRequestDto;
+        this.location=location;
+        this.lookingFor=lookingFor;
     }
 }
