@@ -1,4 +1,4 @@
-package com.finalyear.liwatch.chat_managment.messagedto;
+package com.finalyear.liwatch.chat.chat_managment.messagedto;
 
 import jakarta.annotation.Nullable;
 import lombok.Data;

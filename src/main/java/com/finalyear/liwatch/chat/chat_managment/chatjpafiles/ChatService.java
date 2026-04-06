@@ -1,10 +1,11 @@
-package com.finalyear.liwatch.chat_managment.chatjpafiles;
+package com.finalyear.liwatch.chat.chat_managment.chatjpafiles;
 
 import com.finalyear.liwatch.chat.Chat;
-import com.finalyear.liwatch.chat_managment.message_model.MessageModel;
-import com.finalyear.liwatch.chat_managment.messagedto.MessageDto;
+import com.finalyear.liwatch.chat.chat_managment.message_model.MessageModel;
+import com.finalyear.liwatch.chat.chat_managment.messagedto.MessageDto;
 import com.finalyear.liwatch.negotiation.Negotiation;
-import com.finalyear.liwatch.test_repositories.NegotiationRepository;
+
+import com.finalyear.liwatch.negotiation.negotiation_management.NegotiationRepository;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ public class ChatService {
     @Autowired
     private  ChatRepository chatRepository;
     @Autowired
-    private  NegotiationRepository negotiationRepository;
+    private NegotiationRepository negotiationRepository;
     @Autowired
     private  UserRepository userRepository;
 

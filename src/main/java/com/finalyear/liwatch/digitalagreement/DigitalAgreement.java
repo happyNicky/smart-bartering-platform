@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+
 public class DigitalAgreement {
 
     @Id @GeneratedValue
@@ -27,14 +27,18 @@ public class DigitalAgreement {
     @Enumerated(EnumType.STRING)
     private AgreementType type;
 
-    @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL)
-    private List<Signature> signatures;
-
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Status status;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "id_card_image_of_swapper",nullable = true)
+    private  String idCardImageOfSwapper;
 
 
 

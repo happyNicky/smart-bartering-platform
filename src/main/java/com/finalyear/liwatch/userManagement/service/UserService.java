@@ -124,5 +124,11 @@ public class UserService {
 
         return ResponseEntity.ok("Email verified successfully");
     }
+
+    public User getUser(Long id){
+        return userRepository.findById(Math.toIntExact(id)).orElseThrow(
+                ()-> new RuntimeException("Swap Request not found!")
+        );
+    }
 }
 

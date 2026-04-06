@@ -7,7 +7,6 @@ import com.finalyear.liwatch.userManagement.utils.enums.Role;
 import com.finalyear.liwatch.userManagement.utils.enums.Status;
 import com.finalyear.liwatch.userprofile.UserProfile;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;

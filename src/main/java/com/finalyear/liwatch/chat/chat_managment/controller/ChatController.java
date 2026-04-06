@@ -1,8 +1,8 @@
-package com.finalyear.liwatch.chat_managment.controller;
+package com.finalyear.liwatch.chat.chat_managment.controller;
 
 import com.finalyear.liwatch.chat.Chat;
-import com.finalyear.liwatch.chat_managment.chatjpafiles.ChatService;
-import com.finalyear.liwatch.chat_managment.messagedto.MessageDto;
+import com.finalyear.liwatch.chat.chat_managment.chatjpafiles.ChatService;
+import com.finalyear.liwatch.chat.chat_managment.messagedto.MessageDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

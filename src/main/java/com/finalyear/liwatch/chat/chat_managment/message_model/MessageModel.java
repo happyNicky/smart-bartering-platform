@@ -1,4 +1,4 @@
-package com.finalyear.liwatch.chat_managment.message_model;
+package com.finalyear.liwatch.chat.chat_managment.message_model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
