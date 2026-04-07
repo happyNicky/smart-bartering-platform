@@ -8,6 +8,10 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/post")
@@ -19,8 +23,9 @@ public class PostController {
 
     // create a single post
     @PostMapping("/createPost")
-    public ResponseEntity<PostResponseDto> createPost(@RequestBody PostRequestDto postRequest) {
-        PostResponseDto createdPost = postService.createPost(postRequest);
+    public ResponseEntity<PostResponseDto> createPost(  @RequestPart("images") List<MultipartFile> images,
+                                                             @RequestPart("post") String postJson) throws IOException {
+        PostResponseDto createdPost = postService.createPost(images,postJson);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
     }
 

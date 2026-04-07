@@ -1,5 +1,7 @@
 package com.finalyear.liwatch.Post;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.finalyear.liwatch.Cloudinary.CloudinaryService;
 import com.finalyear.liwatch.Item.Item;
 import com.finalyear.liwatch.Item.ItemRequestDto;
 import com.finalyear.liwatch.Post.enums.PostType;
@@ -23,8 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.parameters.P;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +46,31 @@ public class PostService {
     private PostMediaRepository postMediaRepository;
     @Autowired
     private UserUtilMethods userUtilMethods;
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
 
 
 
     // create a single post
-    public PostResponseDto createPost(PostRequestDto postItem) {
+
+    public PostResponseDto createPost(List<MultipartFile> images, String postJson) throws IOException {
+
+        // under trial
+        List<String> postImages=cloudinaryService.uploadMultiple(images);
+        List<PostMediaDto> postMediaDtoList= new ArrayList<>();
+        for(String postImage : postImages)
+        {
+            PostMediaDto postMediaDto= new PostMediaDto();
+            postMediaDto.setPostImageUrl(postImage);
+            postMediaDtoList.add(postMediaDto);
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        PostRequestDto postItem = objectMapper.readValue(postJson, PostRequestDto.class);
+        postItem.setPostImages(postMediaDtoList);
+
+        // end of under trail
+
 
         if (postItem.getPostType()== PostType.ITEM && postItem.getItem() == null) {
             throw new RuntimeException("Item data required");
@@ -85,7 +108,7 @@ public class PostService {
 
         Post savedPost = postRepository.save(post);
 
-      // Convert image URLs to PostMedia entities
+        // Convert image URLs to PostMedia entities
         List<PostMedia> postMediaList= new ArrayList<>();
         List<PostMediaDto> postMediaDtosList= new ArrayList<>();
 
@@ -102,7 +125,7 @@ public class PostService {
             postMediaDtosList.add(postMediaDto);
         }
 
-     // add post media list to post and save
+        // add post media list to post and save
         savedPost.getPostImages().clear();
         savedPost.getPostImages().addAll(postMediaList);
 
@@ -127,9 +150,6 @@ public class PostService {
 
         return prd;
     }
-
-
-
 
     // delete a single post with id
     public void deletePost(Long id) {
@@ -334,4 +354,9 @@ public class PostService {
 
         return convertToDto(updatedPost);
     }
+
+
+    // trail create post
+
+
 }

@@ -13,11 +13,10 @@ import com.finalyear.liwatch.service.ServiceRequestDto;
 import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PostUtilMethods {
+
 
     public static PostResponseDto getPostResponseDtoFromPost(User user, Post post, List<PostMediaDto> postMediaDtosList)
     {
@@ -99,5 +98,7 @@ public class PostUtilMethods {
         serviceResponseDto.setSkillLevel(service.getSkillLevel());
         return serviceResponseDto;
     }
+
+
 
 }
