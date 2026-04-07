@@ -126,7 +126,7 @@ public class UserService {
     }
 
     public User getUser(Long id){
-        return userRepository.findById(Math.toIntExact(id)).orElseThrow(
+        return userRepository.findById(id).orElseThrow(
                 ()-> new RuntimeException("Swap Request not found!")
         );
     }
