@@ -334,4 +334,10 @@ public class PostService {
 
         return convertToDto(updatedPost);
     }
+
+    public Post getPostEntity(Long id){
+        return postRepository.findById(id).orElseThrow(
+                ()-> new RuntimeException("Post not found!")
+        );
+    }
 }

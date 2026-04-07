@@ -1,7 +1,7 @@
 package com.finalyear.liwatch.barter.barter_managment;
 
 import com.finalyear.liwatch.Post.Post;
-import com.finalyear.liwatch.Post.post_management.PostService;
+import com.finalyear.liwatch.Post.PostService;
 import com.finalyear.liwatch.barter.Barter;
 import com.finalyear.liwatch.barter.dto.BarterCreateDto;
 import com.finalyear.liwatch.directswap.DirectSwapRequest;
@@ -37,8 +37,8 @@ public class BarterService {
         Barter barter = new Barter();
         User userA = userService.getUser(dto.getUserAId());
         User userB = userService.getUser(dto.getUserBId());
-        Post postA= postService.getPost(dto.getPostAId());
-        Post postB= postService.getPost(dto.getPostBId());
+        Post postA= postService.getPostEntity(dto.getPostAId());
+        Post postB= postService.getPostEntity(dto.getPostBId());
         LocalDateTime currentTime= LocalDateTime.now();
         DirectSwapRequest request= swapRequestService.getSwapRequest(dto.getSwapRequestId());
         barter.setPostA(postA);
