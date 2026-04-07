@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/post")
 public class PostController {
 
-
     @Autowired
     private PostService postService;
 

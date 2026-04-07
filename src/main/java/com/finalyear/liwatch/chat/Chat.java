@@ -18,9 +18,11 @@ public class Chat {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "negotiation_id")
     private Negotiation negotiation;
 
     @ManyToOne
+    @JoinColumn(name = "sender_id")
     private User sender;
 
     @Column(columnDefinition = "TEXT")

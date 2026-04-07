@@ -42,13 +42,13 @@ public class Barter {
         @ManyToOne
         private Post postA;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.LAZY)
         private Post postB;
 
-        @OneToOne(mappedBy = "barter", cascade = CascadeType.ALL)
+        @OneToOne(mappedBy = "barter", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
         private Negotiation negotiation;
 
-        @OneToMany(mappedBy = "barter")
+        @OneToMany(mappedBy = "barter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
         private List<DigitalAgreement> agreements;
 
 }

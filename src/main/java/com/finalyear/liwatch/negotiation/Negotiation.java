@@ -20,7 +20,7 @@ public class Negotiation {
     @Id @GeneratedValue
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "barter_id")
     private Barter barter;
 
@@ -29,8 +29,8 @@ public class Negotiation {
     @Enumerated(EnumType.STRING)
     private NegotiationStatus status;
 
-    //  One negotiation → many messages
-    @OneToMany(mappedBy = "negotiation", cascade = CascadeType.ALL)
+    //  one negotiation will have many messages
+    @OneToMany(mappedBy = "negotiation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Chat> messages;
 
 

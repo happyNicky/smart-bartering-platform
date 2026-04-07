@@ -1,4 +1,4 @@
-package com.finalyear.liwatch.swap_request;
+package com.finalyear.liwatch.swap_cycle_request;
 
 import com.finalyear.liwatch.Post.Post;
 import com.finalyear.liwatch.directswap.request_enum.RequestStatus;

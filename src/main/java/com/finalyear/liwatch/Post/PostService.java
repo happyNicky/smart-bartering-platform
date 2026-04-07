@@ -3,29 +3,23 @@ package com.finalyear.liwatch.Post;
 import com.finalyear.liwatch.Item.Item;
 import com.finalyear.liwatch.Item.ItemRequestDto;
 import com.finalyear.liwatch.Post.enums.PostType;
-import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.Post.utils.PostUtilMethods;
 import com.finalyear.liwatch.media.postMedia.PostMedia;
 import com.finalyear.liwatch.media.postMedia.PostMediaDto;
 import com.finalyear.liwatch.media.postMedia.PostMediaRepository;
 import com.finalyear.liwatch.service.Service;
 import com.finalyear.liwatch.service.ServiceRequestDto;
-import com.finalyear.liwatch.service.enumservice.SkillLevel;
 import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
-import com.finalyear.liwatch.userManagement.utils.classes.UserUtilMethods;
-import org.apache.coyote.Request;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.parameters.P;
 
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +35,7 @@ public class PostService {
     @Autowired
     private PostMediaRepository postMediaRepository;
     @Autowired
-    private UserUtilMethods userUtilMethods;
+    private UserUtilService userUtilService;
 
 
 
@@ -57,7 +51,7 @@ public class PostService {
             throw new RuntimeException("Service data required");
         }
         //get currently authenticated user
-        User user= userUtilMethods.getCurrentlyAuthenticatedUser();
+        User user= userUtilService.getCurrentlyAuthenticatedUser();
 
         // create a new post and set data from the post request dto
         Post post;
@@ -149,7 +143,7 @@ public class PostService {
         postMediaDtosList=createPostMediaDtoListFromPostMediaList(id,post);
 
         //get the authenticated user
-        User user= userUtilMethods.getCurrentlyAuthenticatedUser();
+        User user= userUtilService.getCurrentlyAuthenticatedUser();
         if(post.getPostType()==PostType.ITEM)
         {
            PostResponseDto prd= PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);

@@ -67,13 +67,13 @@ public class Post {
     @JoinColumn(name = "user_id")
     protected User user;
 
-    @OneToMany(mappedBy = "offeredPost")
+    @OneToMany(mappedBy = "offeredPost", fetch = FetchType.LAZY)
     protected List<DirectSwapRequest> offeredRequests;
 
-    @OneToMany(mappedBy = "requestedPost")
+    @OneToMany(mappedBy = "requestedPost", fetch = FetchType.LAZY)
     protected List<DirectSwapRequest> requestedInRequests;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval= true)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval= true ,fetch = FetchType.LAZY)
     private List<PostMedia> postImages= new ArrayList<>();
 
 

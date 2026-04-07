@@ -1,11 +1,11 @@
 package com.finalyear.liwatch.swapcycle;
 
-import com.finalyear.liwatch.swap_request.CycleSwapRequest;
+import com.finalyear.liwatch.swap_cycle_request.CycleSwapRequest;
 import com.finalyear.liwatch.swapcycle.enum_swapcycle.Status;
 import com.finalyear.liwatch.swapcycle_agreement.CycleAgreement;
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 import java.util.List;
 

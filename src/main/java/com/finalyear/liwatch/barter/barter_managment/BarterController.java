@@ -14,8 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class BarterController {
     @Autowired
     private BarterService service;
-    @PostMapping("create-barter")
-    public ResponseEntity<String> createBarter(@Valid @RequestBody BarterCreateDto dto){
-        return ResponseEntity.ok(service.createBarter(dto));
-    }
+
 }

@@ -21,7 +21,7 @@ public class DigitalAgreement {
     @Id @GeneratedValue
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Barter barter;
 
     @Enumerated(EnumType.STRING)

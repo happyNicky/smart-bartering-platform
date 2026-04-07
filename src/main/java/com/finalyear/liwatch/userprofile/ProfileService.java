@@ -1,8 +1,7 @@
 package com.finalyear.liwatch.userprofile;
 
-import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.userManagement.model.User;
-import com.finalyear.liwatch.userManagement.utils.classes.UserUtilMethods;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import com.finalyear.liwatch.userprofile.util.ProfileUtilMethods;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,12 +15,12 @@ public class ProfileService {
     @Autowired
     private ProfileRepository profileRepository;
     @Autowired
-    private UserUtilMethods userUtilMethods;
+    private UserUtilService userUtilService;
 
     public ResponseEntity<?> createProfile(ProfileRequestDto profileRequestDto) {
 
        //get currently authenticated user
-        User user= userUtilMethods.getCurrentlyAuthenticatedUser();
+        User user= userUtilService.getCurrentlyAuthenticatedUser();
         if(profileRepository.findByUser(user).isPresent()) {
            return ResponseEntity.status(HttpStatus.CONFLICT).body("profile for this account is already created!");
         }
@@ -61,7 +60,7 @@ public class ProfileService {
     public ResponseEntity<?> updateProfile(ProfileRequestDto profileRequestDto) {
 
         //get currently authenticated user
-        User user= userUtilMethods.getCurrentlyAuthenticatedUser();
+        User user= userUtilService.getCurrentlyAuthenticatedUser();
         //Get the profile using the user.
         Optional<UserProfile> profile;
         if(profileRepository.findByUser(user).isPresent())
