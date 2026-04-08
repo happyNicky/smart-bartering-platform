@@ -5,31 +5,29 @@ import com.finalyear.liwatch.Cloudinary.CloudinaryService;
 import com.finalyear.liwatch.Item.Item;
 import com.finalyear.liwatch.Item.ItemRequestDto;
 import com.finalyear.liwatch.Post.enums.PostType;
-import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.Post.utils.PostUtilMethods;
 import com.finalyear.liwatch.media.postMedia.PostMedia;
 import com.finalyear.liwatch.media.postMedia.PostMediaDto;
 import com.finalyear.liwatch.media.postMedia.PostMediaRepository;
 import com.finalyear.liwatch.service.Service;
 import com.finalyear.liwatch.service.ServiceRequestDto;
-import com.finalyear.liwatch.service.enumservice.SkillLevel;
 import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
-import com.finalyear.liwatch.userManagement.utils.classes.UserUtilMethods;
-import org.apache.coyote.Request;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.parameters.P;
 
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+<<<<<<< HEAD
 import java.io.IOException;
 import java.time.LocalDateTime;
+=======
+>>>>>>> 11d0ef57218d888802446aeab8251fd7fc99de1f
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,9 +43,13 @@ public class PostService {
     @Autowired
     private PostMediaRepository postMediaRepository;
     @Autowired
+<<<<<<< HEAD
     private UserUtilMethods userUtilMethods;
     @Autowired
     private CloudinaryService cloudinaryService;
+=======
+    private UserUtilService userUtilService;
+>>>>>>> 11d0ef57218d888802446aeab8251fd7fc99de1f
 
 
 
@@ -64,7 +66,7 @@ public class PostService {
             throw new RuntimeException("Service data required");
         }
         //get currently authenticated user
-        User user= userUtilMethods.getCurrentlyAuthenticatedUser();
+        User user= userUtilService.getCurrentlyAuthenticatedUser();
 
         // create a new post and set data from the post request dto
         Post post;
@@ -154,7 +156,7 @@ public class PostService {
         postMediaDtosList=createPostMediaDtoListFromPostMediaList(id,post);
 
         //get the authenticated user
-        User user= userUtilMethods.getCurrentlyAuthenticatedUser();
+        User user= userUtilService.getCurrentlyAuthenticatedUser();
         if(post.getPostType()==PostType.ITEM)
         {
            PostResponseDto prd= PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);
@@ -340,6 +342,7 @@ public class PostService {
         return convertToDto(updatedPost);
     }
 
+<<<<<<< HEAD
 
     // trail code
     // trail create post
@@ -445,4 +448,11 @@ public class PostService {
 //    }
 
 
+=======
+    public Post getPostEntity(Long id){
+        return postRepository.findById(id).orElseThrow(
+                ()-> new RuntimeException("Post not found!")
+        );
+    }
+>>>>>>> 11d0ef57218d888802446aeab8251fd7fc99de1f
 }

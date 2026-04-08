@@ -17,7 +17,6 @@ import java.util.List;
 @RequestMapping("api/post")
 public class PostController {
 
-
     @Autowired
     private PostService postService;
 
@@ -72,6 +71,7 @@ public class PostController {
         Page<PostResponseDto> posts = postService.getPostsByCategory(category, pageable);
         return ResponseEntity.ok(posts);
     }
+
 
 
 

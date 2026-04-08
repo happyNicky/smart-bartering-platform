@@ -1,4 +1,4 @@
-package com.finalyear.liwatch.chat_managment;
+package com.finalyear.liwatch.chat.chat_managment;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

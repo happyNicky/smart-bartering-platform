@@ -1,4 +1,4 @@
-package com.finalyear.liwatch.chat_managment.chatjpafiles;
+package com.finalyear.liwatch.chat.chat_managment.chatjpafiles;
 
 import com.finalyear.liwatch.chat.Chat;
 import org.springframework.data.jpa.repository.JpaRepository;

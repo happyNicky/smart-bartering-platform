@@ -9,11 +9,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserUtilMethods {
+public class UserUtilService {
 
     private final UserRepository userRepository;
 
-    public UserUtilMethods(UserRepository userRepository) {
+    public UserUtilService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

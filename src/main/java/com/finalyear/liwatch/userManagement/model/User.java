@@ -7,7 +7,6 @@ import com.finalyear.liwatch.userManagement.utils.enums.Role;
 import com.finalyear.liwatch.userManagement.utils.enums.Status;
 import com.finalyear.liwatch.userprofile.UserProfile;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -47,27 +46,26 @@ public class User {
     private String verificationToken;
 
     private LocalDateTime tokenExpiry;
-    @OneToOne
-    @JoinColumn(name = "user_profile_id")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProfile userProfile;
 
-    // 🔹 Requests sent
-    @OneToMany(mappedBy = "sender")
+    //requests sent
+    @OneToMany(mappedBy = "requestSender", fetch = FetchType.LAZY)
     private List<DirectSwapRequest> sentDirectRequests;
 
-    // 🔹 Requests received
-    @OneToMany(mappedBy = "receiver")
+    //requests received
+    @OneToMany(mappedBy = "requestReceiver", fetch = FetchType.LAZY)
     private List<DirectSwapRequest> receivedDirectRequests;
 
-    // 🔹 Messages sent
-    @OneToMany(mappedBy = "sender")
+    //messages sent
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
     private List<Chat> messages;
 
-    // 🔹 Barters as userA
+    //barters as userA
     @OneToMany(mappedBy = "userA")
     private List<Barter> bartersAsUserA;
 
-    // 🔹 Barters as userB
+    //Barters as userB
     @OneToMany(mappedBy = "userB")
     private List<Barter> bartersAsUserB;
 

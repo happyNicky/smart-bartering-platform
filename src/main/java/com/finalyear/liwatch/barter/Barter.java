@@ -3,7 +3,7 @@ package com.finalyear.liwatch.barter;
 
 import com.finalyear.liwatch.Post.Post;
 import com.finalyear.liwatch.barter.barterenum.BarterType;
-import com.finalyear.liwatch.barter.barterenum.Status;
+
 import com.finalyear.liwatch.digitalagreement.DigitalAgreement;
 import com.finalyear.liwatch.directswap.DirectSwapRequest;
 import com.finalyear.liwatch.negotiation.Negotiation;
@@ -24,9 +24,6 @@ public class Barter {
         @Id @GeneratedValue
         private Long id;
 
-        @Enumerated(EnumType.STRING)
-        private Status status;
-
         private LocalDateTime createdAt;
 
         // owning side
@@ -45,14 +42,13 @@ public class Barter {
         @ManyToOne
         private Post postA;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.LAZY)
         private Post postB;
 
-        @OneToOne(mappedBy = "barter", cascade = CascadeType.ALL)
+        @OneToOne(mappedBy = "barter", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
         private Negotiation negotiation;
 
-        @OneToMany(mappedBy = "barter")
+        @OneToMany(mappedBy = "barter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
         private List<DigitalAgreement> agreements;
-
 
 }

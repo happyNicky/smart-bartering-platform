@@ -2,6 +2,7 @@ package com.finalyear.liwatch.rating;
 
 
 
+import com.finalyear.liwatch.userManagement.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -19,11 +20,13 @@ public class Rating {
     @Column(name = "rating_id")
     private Long ratingId;
 
-    @Column(name = "from_user_id", nullable = false)
-    private Long fromUserId;
+    @ManyToOne
+    @JoinColumn(name = "from_user_id")
+    private User fromUser;
 
-    @Column(name = "to_user_id", nullable = false)
-    private Long toUserId;
+    @ManyToOne
+    @JoinColumn(name = "to_user_id")
+    private User toUser;
 
     @Column(nullable = false)
     private Integer score;
