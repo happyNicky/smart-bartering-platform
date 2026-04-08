@@ -20,16 +20,18 @@ public class CloudinaryService {
     }
 
 
-    public String upload(MultipartFile file) throws IOException {
+    public String upload(MultipartFile file,String folderName) throws IOException {
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "auto"));
+                ObjectUtils.asMap("resource_type", "auto",
+                        "folder",folderName
+                        ));
         return uploadResult.get("secure_url").toString();
     }
 
-    public List<String> uploadMultiple(List<MultipartFile> files) throws IOException {
+    public List<String> uploadMultiple(List<MultipartFile> files,String folderName) throws IOException {
         List<String> urls = new ArrayList<>();
         for (MultipartFile file : files) {
-            String url = upload(file);  // reuse single-file upload method
+            String url = upload(file,folderName);  // reuse single-file upload method
             urls.add(url);
         }
         return urls;

@@ -22,11 +22,15 @@ public class PostController {
     private PostService postService;
 
     // create a single post
-    @PostMapping("/createPost")
-    public ResponseEntity<PostResponseDto> createPost(  @RequestPart("images") List<MultipartFile> images,
-                                                             @RequestPart("post") String postJson) throws IOException {
-        PostResponseDto createdPost = postService.createPost(images,postJson);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
+//    @PostMapping("/createPost")
+//    public ResponseEntity<PostResponseDto> createPost(  @RequestPart("images") List<MultipartFile> images,
+//                                                             @RequestPart("post") String postJson) throws IOException {
+//        PostResponseDto createdPost = postService.createPost(images,postJson);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
+//    }
+        @PostMapping("/createPost")
+    public ResponseEntity<PostResponseDto> createPost(  @RequestBody PostRequestDto postRequestDto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(postRequestDto));
     }
 
     // delete a single post with id

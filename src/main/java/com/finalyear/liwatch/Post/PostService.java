@@ -53,24 +53,8 @@ public class PostService {
 
 
     // create a single post
-
-    public PostResponseDto createPost(List<MultipartFile> images, String postJson) throws IOException {
-
-        // under trial
-        List<String> postImages=cloudinaryService.uploadMultiple(images);
-        List<PostMediaDto> postMediaDtoList= new ArrayList<>();
-        for(String postImage : postImages)
-        {
-            PostMediaDto postMediaDto= new PostMediaDto();
-            postMediaDto.setPostImageUrl(postImage);
-            postMediaDtoList.add(postMediaDto);
-        }
-        ObjectMapper objectMapper = new ObjectMapper();
-        PostRequestDto postItem = objectMapper.readValue(postJson, PostRequestDto.class);
-        postItem.setPostImages(postMediaDtoList);
-
-        // end of under trail
-
+    // create a single post
+    public PostResponseDto createPost(PostRequestDto postItem) {
 
         if (postItem.getPostType()== PostType.ITEM && postItem.getItem() == null) {
             throw new RuntimeException("Item data required");
@@ -150,6 +134,7 @@ public class PostService {
 
         return prd;
     }
+
 
     // delete a single post with id
     public void deletePost(Long id) {
@@ -356,7 +341,108 @@ public class PostService {
     }
 
 
+    // trail code
     // trail create post
+//    public PostResponseDto createPost(List<MultipartFile> images, String postJson) {
+//
+//        // 1. Upload images safely
+//        List<String> postImages;
+//        try {
+//            postImages = cloudinaryService.uploadMultiple(images, "posts");
+//        } catch (IOException e) {
+//            throw new RuntimeException("Failed to upload images to Cloudinary", e);
+//        }
+//
+//        // 2. Convert image URLs to DTOs
+//        List<PostMediaDto> postMediaDtoList = new ArrayList<>();
+//        for (String postImage : postImages) {
+//            PostMediaDto postMediaDto = new PostMediaDto();
+//            postMediaDto.setPostImageUrl(postImage);
+//            postMediaDtoList.add(postMediaDto);
+//        }
+//
+//        // 3. Parse JSON safely
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        PostRequestDto postItem;
+//        try {
+//            postItem = objectMapper.readValue(postJson, PostRequestDto.class);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Invalid post JSON format", e);
+//        }
+//
+//        postItem.setPostImages(postMediaDtoList);
+//
+//        // 4. Validation
+//        if (postItem.getPostType() == PostType.ITEM && postItem.getItem() == null) {
+//            throw new RuntimeException("Item data required");
+//        }
+//
+//        if (postItem.getPostType() == PostType.SERVICE && postItem.getService() == null) {
+//            throw new RuntimeException("Service data required");
+//        }
+//
+//        // 5. Get authenticated user
+//        User user = userUtilMethods.getCurrentlyAuthenticatedUser();
+//
+//        // 6. Create post
+//        Post post;
+//
+//        if (postItem.getPostType() == PostType.ITEM) {
+//            Item item = PostUtilMethods.createItemFromRequest(postItem);
+//            item.setUser(user);
+//            post = item;
+//        } else {
+//            Service service = PostUtilMethods.createServiceFromRequest(postItem);
+//            service.setUser(user);
+//            post = service;
+//        }
+//
+//        // 7. Save post
+//        Post savedPost = postRepository.save(post);
+//
+//        // 8. Save media
+//        List<PostMedia> postMediaList = new ArrayList<>();
+//        List<PostMediaDto> postMediaDtosList = new ArrayList<>();
+//
+//        for (PostMediaDto media : postItem.getPostImages()) {
+//            PostMedia postMedia = new PostMedia();
+//            postMedia.setPost(savedPost);
+//            postMedia.setPostImageUrl(media.getPostImageUrl());
+//
+//            postMedia = postMediaRepository.save(postMedia);
+//            postMediaList.add(postMedia);
+//
+//            PostMediaDto dto = new PostMediaDto();
+//            dto.setPostImageUrl(postMedia.getPostImageUrl());
+//            postMediaDtosList.add(dto);
+//        }
+//
+//        // 9. Attach media to post
+//        savedPost.getPostImages().clear();
+//        savedPost.getPostImages().addAll(postMediaList);
+//
+//        // 10. Build response
+//        PostResponseDto prd = PostUtilMethods.getPostResponseDtoFromPost(
+//                user, savedPost, postMediaDtosList
+//        );
+//
+//        if (prd.getPostType() == PostType.ITEM) {
+//            assert post instanceof Item;
+//            Item item = (Item) post;
+//            ItemRequestDto itemResponseDto = PostUtilMethods.createItemResponseDtoFromItem(item);
+//            prd.setItem(itemResponseDto);
+//        } else if (prd.getPostType() == PostType.SERVICE) {
+//            assert post instanceof Service;
+//            Service service = (Service) post;
+//            ServiceRequestDto serviceResponseDto =
+//                    PostUtilMethods.createServiceResponseDtoFromService(service);
+//            prd.setService(serviceResponseDto);
+//        }
+//
+//        postRepository.save(savedPost);
+//
+//        return prd;
+//    }
 
 
 }
