@@ -6,6 +6,7 @@ import com.finalyear.liwatch.userManagement.model.PasswordResetToken;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.repository.PasswordResetTokenRepository;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
+import com.finalyear.liwatch.userprofile.UserProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -60,7 +61,6 @@ public class UserService {
            use.setTokenExpiry(LocalDateTime.now().plusHours(24));
 
            userRepository.save(use);
-           System.out.println("token: "+token);
            emailSendingService.sendVerificationEmail(user.getEmail(), token);
            return use;
 
@@ -119,11 +119,13 @@ public class UserService {
             return ResponseEntity.badRequest().body("Token expired");
         }
 
-        System.out.println("email varification being completed!");
         user.setEnabled(true);
         user.setVerificationToken(null);
-        System.out.println("varification token set to null");
         user.setTokenExpiry(null);
+        UserProfile profile = new UserProfile();
+        profile.setUser(user);
+        profile.setLocation("");
+        user.setUserProfile(profile);
         userRepository.save(user);
 
         return ResponseEntity.ok("Email verified successfully");
@@ -182,7 +184,7 @@ public class UserService {
         resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
 
         tokenRepository.save(resetToken);
-        
+
         emailSendingService.sendPasswordResetEmail(user.getEmail(),token);
     }
 
