@@ -40,6 +40,19 @@ public class UserController {
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        userService.createPasswordResetToken(email);
+        return ResponseEntity.ok("If the email exists, a reset link has been sent.");
+    }
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestParam String token,
+            @RequestParam String newPassword) {
+
+        userService.resetPassword(token, newPassword);
+        return ResponseEntity.ok("Password successfully reset");
+    }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginUserDto user) {
         return userService.verify(user);

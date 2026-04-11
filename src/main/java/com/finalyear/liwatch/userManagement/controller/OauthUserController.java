@@ -33,7 +33,7 @@ public class OauthUserController {
         String token = jwtService.generateToken(email);
 
         // construct the frontend URL
-        String frontendCallbackUrl = "http://localhost:3000/auth/callback?token=" + token;
+        String frontendCallbackUrl = "http://localhost:3000/" + token;
 
         // redirect the user's browser back to next.js app
         response.sendRedirect(frontendCallbackUrl);

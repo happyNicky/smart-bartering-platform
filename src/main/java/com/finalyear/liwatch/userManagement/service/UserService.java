@@ -2,7 +2,9 @@ package com.finalyear.liwatch.userManagement.service;
 
 import com.finalyear.liwatch.userManagement.DTO.LoginUserDto;
 import com.finalyear.liwatch.userManagement.DTO.RegisterUserDto;
+import com.finalyear.liwatch.userManagement.model.PasswordResetToken;
 import com.finalyear.liwatch.userManagement.model.User;
+import com.finalyear.liwatch.userManagement.repository.PasswordResetTokenRepository;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,7 @@ public class UserService {
 
 
     private final UserRepository userRepository;
+    private final PasswordResetTokenRepository tokenRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -32,8 +35,9 @@ public class UserService {
 
     private final  EmailSendingService emailSendingService;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, EmailSendingService emailSendingService) {
+    public UserService(UserRepository userRepository, PasswordResetTokenRepository tokenRepository, BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, EmailSendingService emailSendingService) {
         this.userRepository = userRepository;
+        this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
@@ -130,5 +134,58 @@ public class UserService {
                 ()-> new RuntimeException("Swap Request not found!")
         );
     }
+
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (resetToken.isExpired()) {
+            throw new RuntimeException("Token expired");
+        }
+
+        User user = resetToken.getUser();
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        tokenRepository.delete(resetToken);
+    }
+
+    public boolean validateToken(String token) {
+        Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(token);
+
+        if (tokenOpt.isEmpty()) return false;
+
+        PasswordResetToken resetToken = tokenOpt.get();
+
+        return !resetToken.isExpired();
+    }
+
+
+    public void createPasswordResetToken(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        // Always return success (don't reveal if email exists)
+        if (userOpt.isEmpty()) return;
+
+        User user = userOpt.get();
+
+        // delete existing token
+        tokenRepository.deleteByUser(user);
+
+        String token = UUID.randomUUID().toString();
+
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+
+        tokenRepository.save(resetToken);
+        
+        emailSendingService.sendPasswordResetEmail(user.getEmail(),token);
+    }
+
+
 }
 
