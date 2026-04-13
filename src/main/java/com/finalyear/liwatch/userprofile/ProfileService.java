@@ -1,5 +1,6 @@
 package com.finalyear.liwatch.userprofile;
 
+import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import com.finalyear.liwatch.userprofile.util.ProfileUtilMethods;
@@ -83,6 +84,28 @@ public class ProfileService {
         }
 
 
+    }
+
+    public ResponseEntity<ProfileResponseDto> getMyProfile() {
+        // 1. Get the exact user from the JWT Token securely
+        User currentUser = userUtilService.getCurrentlyAuthenticatedUser();
+        UserSummeryDto userSummeryDto= new UserSummeryDto(currentUser.getId(), currentUser.getFullName(), currentUser.getEmail());
+
+        // 2. Safely extract profile data (handling the case where they haven't set up a profile yet)
+        ProfileResponseDto profileDto = null;
+
+        if (currentUser.getUserProfile() != null) {
+                 profileDto.setBio(currentUser.getUserProfile().getBio());
+                 profileDto.setProfileImage(currentUser.getUserProfile().getProfileImage());
+                 profileDto.setLocation(currentUser.getUserProfile().getLocation());
+                 profileDto.setTrustScore(currentUser.getUserProfile().getTrustScore());
+                 profileDto.setBadgeLevel(currentUser.getUserProfile().getBadgeLevel());
+                 profileDto.setUser(userSummeryDto);
+
+        }
+
+
+        return ResponseEntity.ok(profileDto);
     }
 }
 

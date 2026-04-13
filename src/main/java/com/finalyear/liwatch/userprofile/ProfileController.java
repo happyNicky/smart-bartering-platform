@@ -33,4 +33,8 @@ public class ProfileController {
     {
         return  profileService.updateProfile(profileRequestDto);
     }
+    @GetMapping("/me")
+    public ResponseEntity<ProfileResponseDto> getMe() {
+        return profileService.getMyProfile();
+    }
 }
