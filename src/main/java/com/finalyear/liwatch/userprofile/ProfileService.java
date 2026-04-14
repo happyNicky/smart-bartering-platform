@@ -95,12 +95,14 @@ public class ProfileService {
         ProfileResponseDto profileDto = null;
 
         if (currentUser.getUserProfile() != null) {
+
                  profileDto.setBio(currentUser.getUserProfile().getBio());
                  profileDto.setProfileImage(currentUser.getUserProfile().getProfileImage());
                  profileDto.setLocation(currentUser.getUserProfile().getLocation());
                  profileDto.setTrustScore(currentUser.getUserProfile().getTrustScore());
                  profileDto.setBadgeLevel(currentUser.getUserProfile().getBadgeLevel());
                  profileDto.setUser(userSummeryDto);
+                 profileDto.setProfileId(currentUser.getUserProfile().getProfileId());
 
         }
 
