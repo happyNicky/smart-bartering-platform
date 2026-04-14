@@ -144,8 +144,9 @@ public class PostService {
         List<PostMediaDto> postMediaDtosList= new ArrayList<>();
         postMediaDtosList=createPostMediaDtoListFromPostMediaList(id,post);
 
-        //get the authenticated user
-        User user= userUtilService.getCurrentlyAuthenticatedUser();
+        //get a user that posted the post
+        User user= post.getUser();
+
         if(post.getPostType()==PostType.ITEM)
         {
            PostResponseDto prd= PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);
