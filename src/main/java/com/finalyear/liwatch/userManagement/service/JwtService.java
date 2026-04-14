@@ -36,13 +36,14 @@ public class JwtService {
     public String generateToken(LoginUserDto user) {
 
         Map<String,Object> claims= new HashMap<>();
+        long oneHourInMillis = 60L * 60 * 1000;
         return Jwts
                 .builder()
                 .addClaims(claims)
                 .setSubject(user.getEmail())
                 .setIssuer("codingBuddy")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+60*10*1000))
+                .setExpiration(new Date(System.currentTimeMillis() + oneHourInMillis))
                 .signWith(generateKey())
                 .compact();
 
