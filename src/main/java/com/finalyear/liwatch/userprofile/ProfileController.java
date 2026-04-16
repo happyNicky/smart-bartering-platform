@@ -28,6 +28,12 @@ public class ProfileController {
         return profileService.getProfileById(id);
     }
 
+    @GetMapping("/byUserId/{userId}")
+    public ResponseEntity<?> getProfileByUserId(@PathVariable Long userId)
+    {
+        return profileService.getProfileByUserId(userId);
+    }
+
     @PostMapping("/update/{id}")
     public ResponseEntity<?> updateProfile(@RequestBody ProfileRequestDto profileRequestDto)
     {
