@@ -34,10 +34,10 @@ public class PostController {
 
     // delete a single post with id
     @DeleteMapping("/deletePost/{id}")
-    public ResponseEntity<String> deletePost(@PathVariable Long id)
+    public ResponseEntity<?> deletePost(@PathVariable Long id)
     {
-        postService.deletePost(id);
-       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("successfully deleted post with id "+id );
+
+       return postService.deletePost(id);
     }
 
     // get a single post with id
@@ -60,6 +60,14 @@ public class PostController {
     public ResponseEntity<Page<PostResponseDto>> getAllPosts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostResponseDto> posts = postService.getAllPosts(pageable);
+        return ResponseEntity.ok(posts);
+    }
+
+    // get posts using user
+    @GetMapping("/userPost/{userId}")
+    public ResponseEntity<Page<PostResponseDto>> getPostByUser(@PathVariable Long userId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<PostResponseDto> posts = postService.getAllUserPost(pageable,userId);
         return ResponseEntity.ok(posts);
     }
 

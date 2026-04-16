@@ -1,7 +1,5 @@
 package com.finalyear.liwatch.Post;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.finalyear.liwatch.Cloudinary.CloudinaryService;
 import com.finalyear.liwatch.Item.Item;
 import com.finalyear.liwatch.Item.ItemRequestDto;
 import com.finalyear.liwatch.Post.enums.PostType;
@@ -14,13 +12,15 @@ import com.finalyear.liwatch.service.ServiceRequestDto;
 import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.repository.UserRepository;
+import com.finalyear.liwatch.userManagement.service.UserService;
 import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
+import com.finalyear.liwatch.userManagement.utils.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,9 +128,16 @@ public class PostService {
 
 
     // delete a single post with id
-    public void deletePost(Long id) {
+    public ResponseEntity<?> deletePost(Long id) {
 
-        postRepository.deleteById(id);
+       User user= userUtilService.getCurrentlyAuthenticatedUser();
+       Post post=postRepository.getById(id);
+       if(post.getUser()==user || user.getRole()== Role.ADMIN)
+       {
+           postRepository.deleteById(id);
+           return ResponseEntity.status(HttpStatus.NO_CONTENT).body("post with id "+id+" is successfully deleted.");
+       }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Action not allowed.");
     }
 
 
@@ -443,4 +450,14 @@ public class PostService {
         );
     }
 
+    public Page<PostResponseDto> getAllUserPost(Pageable pageable, Long userId) {
+
+        User user= userRepository.findById(userId).orElseThrow(()-> new RuntimeException("something went wrong!"));
+
+        Page<Post> postsPage = postRepository.findByUser(user,pageable);
+
+        // Convert entities to DTOs
+        return postsPage.map(this::convertToDto);
+
+    }
 }
