@@ -118,7 +118,7 @@ public class ProfileService {
         if( user !=null )
         {
             UserProfile profile= profileRepository.findByUser(user).get();
-            return ResponseEntity.status(HttpStatus.OK).body(profile);
+            return ResponseEntity.status(HttpStatus.OK).body(ProfileUtilMethods.createResponseDtoFromProfile(profile));
         }
         else
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The id "+userId +" is wrong");
