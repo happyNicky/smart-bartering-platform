@@ -33,4 +33,11 @@ public class UserUtilService {
     {
         return userRepository.findById(id).get();
     }
+    public void checkUser(long userId){
+        if (!getCurrentlyAuthenticatedUser().getId().equals(userId))
+            throw new RuntimeException("Unauthorized access");
+    }
+
+
+
 }

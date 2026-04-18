@@ -3,13 +3,18 @@ package com.finalyear.liwatch.negotiation.negotiation_management;
 import com.finalyear.liwatch.barter.Barter;
 import com.finalyear.liwatch.negotiation.Negotiation;
 import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class NegotiationService {
     @Autowired
     NegotiationRepository negotiationRepository;
+    @Autowired
+    UserUtilService userUtilService;
 
     public Negotiation createNegotiation(Barter barter){
         Negotiation negotiation=  new Negotiation();
@@ -28,4 +33,5 @@ public class NegotiationService {
                 );
         return  negotiation;
     }
+
 }

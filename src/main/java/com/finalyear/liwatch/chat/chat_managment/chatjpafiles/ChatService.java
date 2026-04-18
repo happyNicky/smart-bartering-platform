@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class ChatService {
     @Autowired
@@ -45,5 +47,9 @@ public class ChatService {
                 .build();
         //saving the chat to db and returning the object
         return chatRepository.save(chat);
+    }
+    public List<Chat> getAllChat(long userId){
+        userUtilService.checkUser(userId);
+        return  chatRepository.findChatsByUserId(userId);
     }
 }

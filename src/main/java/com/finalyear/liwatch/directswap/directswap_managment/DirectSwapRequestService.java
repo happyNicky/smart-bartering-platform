@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class DirectSwapRequestService {
@@ -76,6 +77,30 @@ public class DirectSwapRequestService {
         directSwapRequestRepository.save(swapRequest);
 
         return "Request Accept";
+    }
+
+    public boolean checkRequestMade(long userId,long postId){
+        userUtilService.checkUser(userId);
+        User user= userService.getUser(userId);
+        Post post= postService.getPostEntity(postId);
+        return  directSwapRequestRepository.existsByRequestSenderAndOfferedPost(user,post);
+    }
+
+    public List<DirectSwapRequest> getMyRequestForSpecificPost(long userId, long postId){
+        userUtilService.checkUser(userId);
+        User user= userService.getUser(userId);
+        Post post= postService.getPostEntity(postId);
+        return directSwapRequestRepository.findByRequestReceiverAndRequestedPost(user,post);
+    }
+    public List<DirectSwapRequest>getAllMyRequest(long userId){
+        userUtilService.checkUser(userId);
+        User user= userService.getUser(userId);
+        return directSwapRequestRepository.findByRequestReceiver(user);
+    }
+    public List<DirectSwapRequest>getAllRequestSentAndReceived(long userId){
+        userUtilService.checkUser(userId);
+        User user= userService.getUser(userId);
+        return  directSwapRequestRepository.findByRequestReceiverOrRequestSender(user,user);
     }
 
 }
