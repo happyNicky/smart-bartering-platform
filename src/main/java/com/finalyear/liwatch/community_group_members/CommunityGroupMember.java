@@ -9,7 +9,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "community_group_members")
+@Table(name = "community_group_members", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"group_id", "user_id"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

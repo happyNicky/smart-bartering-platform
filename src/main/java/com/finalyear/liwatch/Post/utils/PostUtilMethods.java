@@ -34,6 +34,8 @@ public class PostUtilMethods {
         prd.setCreatedAt(post.getCreatedAt());
         prd.setLocation(post.getLocation());
         prd.setLookingFor(post.getLookingFor());
+        prd.setGroupId(post.getGroupId());
+        prd.setIsGroupOnly(post.getIsGroupOnly());
         return prd;
     }
 
@@ -59,6 +61,10 @@ public class PostUtilMethods {
         item.setPartialCashAllowed(postRequestDto.getItem().getPartialCashAllowed());
         item.setEstimatedValue(postRequestDto.getItem().getEstimatedValue());
         item.setCondition(postRequestDto.getItem().getCondition());
+        item.setGroupId(postRequestDto.getGroupId());
+        if (postRequestDto.getIsGroupOnly() != null) {
+            item.setIsGroupOnly(postRequestDto.getIsGroupOnly());
+        }
         return item;
     }
     public static Service createServiceFromRequest(PostRequestDto postRequestDto)
@@ -79,6 +85,10 @@ public class PostUtilMethods {
         service.setSkillLevel(postRequestDto.getService().getSkillLevel());
         service.setAvailability(postRequestDto.getService().getAvailability());
         service.setServiceDuration(postRequestDto.getService().getServiceDuration());
+        service.setGroupId(postRequestDto.getGroupId());
+        if (postRequestDto.getIsGroupOnly() != null) {
+            service.setIsGroupOnly(postRequestDto.getIsGroupOnly());
+        }
         return service;
     }
 

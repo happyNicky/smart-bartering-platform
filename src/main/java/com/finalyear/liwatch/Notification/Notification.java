@@ -36,5 +36,10 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(name = "type", length = 50)
+    private String type;
 
+    @Column(name = "is_read", nullable = false)
+    @Builder.Default
+    private boolean isRead = false;
 }

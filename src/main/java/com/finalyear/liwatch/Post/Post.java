@@ -76,5 +76,9 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval= true ,fetch = FetchType.LAZY)
     private List<PostMedia> postImages= new ArrayList<>();
 
+    @Column(name = "group_id")
+    protected Long groupId;
 
+    @Column(name = "is_group_only")
+    protected Boolean isGroupOnly = false;
 }

@@ -15,10 +15,18 @@ import com.finalyear.liwatch.userManagement.repository.UserRepository;
 import com.finalyear.liwatch.userManagement.service.UserService;
 import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import com.finalyear.liwatch.userManagement.utils.enums.Role;
+import com.finalyear.liwatch.community_group.CommunityGroup;
+import com.finalyear.liwatch.community_group.CommunityGroupRepository;
+import com.finalyear.liwatch.community_group_members.CommunityGroupMember;
+import com.finalyear.liwatch.community_group_members.CommunityGroupMemberRepository;
+import com.finalyear.liwatch.Notification.Notification;
+import com.finalyear.liwatch.Notification.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,9 +44,17 @@ public class PostService {
     private UserRepository userRepository;
     @Autowired
     private PostMediaRepository postMediaRepository;
+    @Autowired
+    private UserUtilService userUtilService;
 
     @Autowired
-    UserUtilService userUtilService;
+    private CommunityGroupRepository communityGroupRepository;
+
+    @Autowired
+    private CommunityGroupMemberRepository communityGroupMemberRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
 
 
@@ -56,6 +72,20 @@ public class PostService {
         }
         //get currently authenticated user
         User user= userUtilService.getCurrentlyAuthenticatedUser();
+
+        if (postItem.getGroupId() != null) {
+            CommunityGroup group = communityGroupRepository.findById(postItem.getGroupId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+            if (group.getStatus() != CommunityGroup.Status.ACTIVE) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot post listings to a suspended group.");
+            }
+            boolean isMember = communityGroupMemberRepository.findByGroupIdAndUserId(group.getGroupId(), user.getId())
+                    .map(m -> m.getStatus() == com.finalyear.liwatch.community_group_members.cg_enums.Status.APPROVED)
+                    .orElse(false);
+            if (!isMember) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You must be an approved member of this community group to post listings.");
+            }
+        }
 
         // create a new post and set data from the post request dto
         Post post;
@@ -123,6 +153,30 @@ public class PostService {
         }
         postRepository.save(savedPost);
 
+        if (savedPost.getGroupId() != null) {
+            CommunityGroup group = communityGroupRepository.findById(savedPost.getGroupId()).orElse(null);
+            if (group != null) {
+                List<CommunityGroupMember> members = communityGroupMemberRepository.findByGroupId(savedPost.getGroupId());
+                for (CommunityGroupMember member : members) {
+                    if (member.getStatus() == com.finalyear.liwatch.community_group_members.cg_enums.Status.APPROVED && !Objects.equals(member.getUserId(), user.getId())) {
+                        User targetUser = userRepository.findById(member.getUserId()).orElse(null);
+                        if (targetUser != null) {
+                            Notification notification = Notification.builder()
+                                    .userId(targetUser.getId())
+                                    .emailAddress(targetUser.getEmail())
+                                    .subject("New Post in Group")
+                                    .body("A new listing '" + savedPost.getTitle() + "' has been posted in group " + group.getGroupName())
+                                    .sentAt(LocalDateTime.now())
+                                    .status(com.finalyear.liwatch.Notification.enum_notification.Status.PENDING)
+                                    .type("GroupActivity")
+                                    .build();
+                            notificationRepository.save(notification);
+                        }
+                    }
+                }
+            }
+        }
+
         return prd;
     }
 
@@ -146,6 +200,16 @@ public class PostService {
 
         Post post= postRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Post with id " + id + " not found"));
+
+        if (Boolean.TRUE.equals(post.getIsGroupOnly())) {
+            User currentUser = userUtilService.getCurrentlyAuthenticatedUser();
+            boolean isMember = communityGroupMemberRepository.findByGroupIdAndUserId(post.getGroupId(), currentUser.getId())
+                    .map(m -> m.getStatus() == com.finalyear.liwatch.community_group_members.cg_enums.Status.APPROVED)
+                    .orElse(false);
+            if (!isMember) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. This post is scoped to group members only.");
+            }
+        }
 
         //create post media dto from post
         List<PostMediaDto> postMediaDtosList= new ArrayList<>();
@@ -206,7 +270,7 @@ public class PostService {
 
     // get all posts with pagination
     public Page<PostResponseDto> getAllPosts(Pageable pageable) {
-        Page<Post> postsPage = postRepository.findAll(pageable);
+        Page<Post> postsPage = postRepository.findAllGlobal(pageable);
 
         // Convert entities to DTOs
         return postsPage.map(this::convertToDto);
@@ -214,7 +278,7 @@ public class PostService {
 
     // get posts by category
     public Page<PostResponseDto> getPostsByCategory(String category, Pageable pageable) {
-        Page<Post> postsPage = postRepository.findByCategory(category, pageable);
+        Page<Post> postsPage = postRepository.findByCategoryGlobal(category, pageable);
         return postsPage.map(this::convertToDto);
     }
 
@@ -242,7 +306,7 @@ public class PostService {
 
             itemRequestDto.setCondition(item.getCondition());
             itemRequestDto.setEstimatedValue(item.getEstimatedValue());
-            return new PostResponseDto(
+            PostResponseDto dto = new PostResponseDto(
                     post.getPostId(),
                     post.getTitle(),
                     post.getDescription(),
@@ -256,14 +320,16 @@ public class PostService {
                     itemRequestDto,
                     post.getLocation(),
                     post.getLookingFor()
-
             );
+            dto.setGroupId(post.getGroupId());
+            dto.setIsGroupOnly(post.getIsGroupOnly());
+            return dto;
         } else {
             Service service=(Service)post;
             serviceRequestDto.setServiceDuration(service.getServiceDuration());
             serviceRequestDto.setAvailability(service.getAvailability());
             serviceRequestDto.setSkillLevel(service.getSkillLevel());
-            return new PostResponseDto(
+            PostResponseDto dto = new PostResponseDto(
                     post.getPostId(),
                     post.getTitle(),
                     post.getDescription(),
@@ -277,9 +343,10 @@ public class PostService {
                     serviceRequestDto,
                     post.getLocation(),
                     post.getLookingFor()
-
             );
-
+            dto.setGroupId(post.getGroupId());
+            dto.setIsGroupOnly(post.getIsGroupOnly());
+            return dto;
         }
 
     }

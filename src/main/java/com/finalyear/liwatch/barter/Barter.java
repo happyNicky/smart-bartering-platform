@@ -46,6 +46,7 @@ public class Barter {
         private Post postB;
 
         @OneToOne(mappedBy = "barter", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+        @com.fasterxml.jackson.annotation.JsonIgnore
         private Negotiation negotiation;
 
         @OneToMany(mappedBy = "barter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

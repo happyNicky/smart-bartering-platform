@@ -24,7 +24,10 @@ public class NegotiationService {
         negotiationRepository.save(negotiation);
         return  negotiation;
     }
-
+    public List<Negotiation> getNegotiationByUserId(Long userId){
+        userUtilService.checkUser(userId);
+        return negotiationRepository.findUserNegotiations(userId);
+    }
     public Negotiation getNegotiationById(Long id){
 
         Negotiation negotiation = negotiationRepository.findById(id)

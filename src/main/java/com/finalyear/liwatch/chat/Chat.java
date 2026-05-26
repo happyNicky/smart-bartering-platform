@@ -19,6 +19,7 @@ public class Chat {
 
     @ManyToOne
     @JoinColumn(name = "negotiation_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Negotiation negotiation;
 
     @ManyToOne

@@ -24,10 +24,10 @@ public class CommunityGroup {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String location;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String category;
 
     @Column(name = "owner_user_id", nullable = false)

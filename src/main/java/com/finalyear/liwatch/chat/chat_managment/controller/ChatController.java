@@ -25,8 +25,8 @@ public class ChatController {
         template.convertAndSend( "/barter/" + messageDto.getNegotiationId(),
                 chat);
     }
-    @PostMapping("/get-all-chat/{id}")
-    public ResponseEntity<List<Chat>> getAllChat(@PathVariable long id){
-        return ResponseEntity.ok(chatService.getAllChat(id));
-    }
+//    @PostMapping("/get-all-chat/{id}")
+//    public ResponseEntity<List<Chat>> getAllChat(@PathVariable long id){
+//        return ResponseEntity.ok(chatService.getAllChat(id));
+//    }
 }

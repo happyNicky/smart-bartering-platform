@@ -29,5 +29,6 @@ public class PostRequestDto {
 
     private ItemRequestDto item;
     private ServiceRequestDto service;
-
+    private Long groupId;
+    private Boolean isGroupOnly;
 }

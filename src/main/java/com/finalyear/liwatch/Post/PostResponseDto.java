@@ -34,6 +34,8 @@ public class PostResponseDto {
     private UserSummeryDto user;
     private ItemRequestDto item;
     private ServiceRequestDto service;
+    private Long groupId;
+    private Boolean isGroupOnly;
 
     public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ItemRequestDto itemRequestDto,String location, String lookingFor) {
         this.postId = postId;

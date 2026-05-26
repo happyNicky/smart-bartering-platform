@@ -1,5 +1,6 @@
 package com.finalyear.liwatch.negotiation.negotiation_management;
 
+import com.finalyear.liwatch.chat.Chat;
 import com.finalyear.liwatch.negotiation.Negotiation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,5 +16,9 @@ import java.util.List;
 public class NegotiationController {
     @Autowired
     private NegotiationService negotiationService;
+    @PostMapping("/get-all-nego/{id}")
+    public ResponseEntity<List<Negotiation>> getAllChat(@PathVariable long id){
+        return ResponseEntity.ok(negotiationService.getNegotiationByUserId(id));
+    }
 
 }

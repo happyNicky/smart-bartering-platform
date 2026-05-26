@@ -25,4 +25,7 @@ public class Review {
 
     @Column(name = "is_published")
     private Boolean isPublished = false;
+
+    @Column(name = "group_id")
+    private Long groupId;
 }
