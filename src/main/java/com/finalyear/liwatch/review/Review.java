@@ -1,8 +1,10 @@
 package com.finalyear.liwatch.review;
 
-
+import com.finalyear.liwatch.rating.Rating;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reviews")
@@ -17,15 +19,16 @@ public class Review {
     @Column(name = "review_id")
     private Long reviewId;
 
-    @Column(name = "rating_id", nullable = false)
-    private Long ratingId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rating_id", nullable = false, unique = true)
+    private Rating rating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
 
-    @Column(name = "is_published")
+    @Column(name = "is_published", nullable = false)
     private Boolean isPublished = false;
 
-    @Column(name = "group_id")
-    private Long groupId;
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
 }

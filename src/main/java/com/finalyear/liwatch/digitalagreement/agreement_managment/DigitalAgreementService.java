@@ -7,48 +7,76 @@ import com.finalyear.liwatch.digitalagreement.dto.DigitalAgreementDto;
 import com.finalyear.liwatch.digitalagreement.dto.InPersonAgreementDto;
 import com.finalyear.liwatch.digitalagreement.enum_agreement.AgreementType;
 import com.finalyear.liwatch.digitalagreement.enum_agreement.Status;
-import com.finalyear.liwatch.digitalagreement.model.DigitalAgreementModel;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import com.finalyear.liwatch.rating.service.RatingWindowService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
 public class DigitalAgreementService {
-    @Autowired
-    private DigitalAgreementRepository repository;
-    @Autowired
-    private BarterService service;
-    public String signPartialAgreement(DigitalAgreementDto dto){
-        DigitalAgreement agreement=  new DigitalAgreement();
-        Barter barter=  service.getBarter(dto.getBarterId());
-        LocalDateTime currentTime= LocalDateTime.now();
+
+    private final DigitalAgreementRepository repository;
+    private final BarterService barterService;
+    private final RatingWindowService ratingWindowService;
+
+    public DigitalAgreementService(
+            DigitalAgreementRepository repository,
+            BarterService barterService,
+            RatingWindowService ratingWindowService) {
+        this.repository = repository;
+        this.barterService = barterService;
+        this.ratingWindowService = ratingWindowService;
+    }
+
+    @Transactional
+    public String signPartialAgreement(DigitalAgreementDto dto) {
+        Barter barter = barterService.getBarter(dto.getBarterId());
+        LocalDateTime now = LocalDateTime.now();
+        DigitalAgreement agreement = new DigitalAgreement();
         agreement.setBarter(barter);
-        agreement.setCreatedAt(currentTime);
+        agreement.setCreatedAt(now);
         agreement.setStatus(Status.ACTIVE);
-        agreement.setUpdatedAt(currentTime);
+        agreement.setUpdatedAt(now);
         agreement.setType(dto.getAgreementType());
         repository.save(agreement);
         return "Agreement created with id: " + agreement.getId();
     }
-    public DigitalAgreement completeAgreement(InPersonAgreementDto dto){
-        DigitalAgreement agreement= repository.findById(dto.getAgreementID()).orElseThrow(
-                ()->new RuntimeException("Partial Agreement is not found!!")
-        );
-        if(agreement.getType()==AgreementType.FINALIZED)
+
+    /**
+     * UC-06: Physical exchange complete — finalize agreement and open rating window.
+     */
+    @Transactional
+    public DigitalAgreement completeAgreement(InPersonAgreementDto dto) {
+        DigitalAgreement agreement = repository.findById(dto.getAgreementID())
+                .orElseThrow(() -> new RuntimeException("Agreement not found"));
+        if (agreement.getType() == AgreementType.FINALIZED) {
             throw new RuntimeException("Agreement already finalized");
+        }
         agreement.setIdCardImageOfSwapper(dto.getIdCardImageOfSwapper());
         agreement.setType(AgreementType.FINALIZED);
         agreement.setStatus(Status.ACTIVE);
+        agreement.setUpdatedAt(LocalDateTime.now());
         repository.save(agreement);
+
+        // UC-06 trigger: open rating window now that exchange is complete
+        ratingWindowService.openWindowForBarter(agreement.getBarter().getId());
         return agreement;
     }
-    public String cancelAgreement(Long id){
-        DigitalAgreement agreement= repository.findById(id).orElseThrow(
-                ()->new RuntimeException("Agreement is not found!")
-        );
+
+    /**
+     * UC-05: Partial agreement cancelled — open rating window for both parties.
+     */
+    @Transactional
+    public String cancelAgreement(Long id) {
+        DigitalAgreement agreement = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Agreement not found"));
         agreement.setStatus(Status.CANCELED);
-        return "Agreement Canceled !!";
+        agreement.setUpdatedAt(LocalDateTime.now());
+        repository.save(agreement);
+
+        // UC-05 trigger: open rating window after cancellation
+        ratingWindowService.openWindowForBarter(agreement.getBarter().getId());
+        return "Agreement cancelled. Rating window opened for both parties.";
     }
 }

@@ -1,11 +1,12 @@
 package com.finalyear.liwatch.userprofile;
 
+import com.finalyear.liwatch.rating.repository.RatingRepository;
+import com.finalyear.liwatch.rating.service.RatingService;
 import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
+import com.finalyear.liwatch.userprofile.enums.BadgeLevel;
 import com.finalyear.liwatch.userprofile.util.ProfileUtilMethods;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,115 +15,75 @@ import java.util.Optional;
 
 @Service
 public class ProfileService {
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private UserUtilService userUtilService;
 
-    public ResponseEntity<?> createProfile(ProfileRequestDto profileRequestDto) {
+    private final ProfileRepository profileRepository;
+    private final UserUtilService userUtilService;
+    private final RatingRepository ratingRepository;
+    private final RatingService ratingService;
 
-       //get currently authenticated user
-        User user= userUtilService.getCurrentlyAuthenticatedUser();
-        if(profileRepository.findByUser(user).isPresent()) {
-           return ResponseEntity.status(HttpStatus.CONFLICT).body("profile for this account is already created!");
-        }
-
-        // create a new userprofile and set the data from profileRequestDto to the newly created userProfile
-        UserProfile profile= new UserProfile();
-        profile.setBio(profileRequestDto.getBio());
-        profile.setProfileImage(profileRequestDto.getProfileImage());
-        profile.setUser(user);
-        profile.setLocation(profileRequestDto.getLocation());
-
-        // save newly created userProfile to our database
-        UserProfile dbProfile=profileRepository.save(profile);
-
-        // create userProfileResponseDto, set the data to it and return it
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ProfileUtilMethods.createResponseDtoFromProfile(dbProfile));
-
+    public ProfileService(
+            ProfileRepository profileRepository,
+            UserUtilService userUtilService,
+            RatingRepository ratingRepository,
+            RatingService ratingService) {
+        this.profileRepository = profileRepository;
+        this.userUtilService = userUtilService;
+        this.ratingRepository = ratingRepository;
+        this.ratingService = ratingService;
     }
 
+    public ResponseEntity<?> createProfile(ProfileRequestDto dto) {
+        User user = userUtilService.getCurrentlyAuthenticatedUser();
+        if (profileRepository.findByUser(user).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("A profile for this account already exists");
+        }
+        UserProfile profile = new UserProfile();
+        profile.setBio(dto.getBio());
+        profile.setProfileImage(dto.getProfileImage());
+        profile.setLocation(dto.getLocation());
+        profile.setUser(user);
+        UserProfile saved = profileRepository.save(profile);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ProfileUtilMethods.createResponseDtoFromProfile(saved, ratingService));
+    }
 
     public ResponseEntity<?> getProfileById(Long id) {
-        //Get the profile with the given id,If the profile exists or throw an exception.
-        Optional<UserProfile> profile;
-        if(profileRepository.findById(id).isPresent())
-        {
-            profile= profileRepository.findById(id);
-        }
-        else
-        {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("There is no profile with id: "+id);
-        }
-
-        // convert the profile to profileResponseDto and return
-        return ResponseEntity.status(HttpStatus.OK).body( ProfileUtilMethods.createResponseDtoFromProfile(profile.get()));
-    }
-
-    public ResponseEntity<?> updateProfile(ProfileRequestDto profileRequestDto) {
-
-        //get currently authenticated user
-        User user= userUtilService.getCurrentlyAuthenticatedUser();
-        //Get the profile using the user.
-        Optional<UserProfile> profile;
-        if(profileRepository.findByUser(user).isPresent())
-        {
-            profile= profileRepository.findByUser(user);
-            // update the data
-            profile.get().setBio(profileRequestDto.getBio());
-            profile.get().setLocation(profileRequestDto.getLocation());
-            profile.get().setProfileImage(profileRequestDto.getProfileImage());
-
-            //save the update profile
-            UserProfile updatedProfile=profileRepository.save(profile.get());
-
-            // create response dto and return
-            return ResponseEntity.status(HttpStatus.OK).body( ProfileUtilMethods.createResponseDtoFromProfile(updatedProfile));
-        }
-        else
-        {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("create profile first before updating it ");
-        }
-
-
-    }
-
-    public ResponseEntity<ProfileResponseDto> getMyProfile() {
-        // 1. Get the exact user from the JWT Token securely
-        User currentUser = userUtilService.getCurrentlyAuthenticatedUser();
-        UserSummeryDto userSummeryDto= new UserSummeryDto(currentUser.getId(), currentUser.getFullName(), currentUser.getEmail());
-
-        // 2. Safely extract profile data (handling the case where they haven't set up a profile yet)
-        ProfileResponseDto profileDto = null;
-
-        if (currentUser.getUserProfile() != null) {
-
-                 profileDto.setBio(currentUser.getUserProfile().getBio());
-                 profileDto.setProfileImage(currentUser.getUserProfile().getProfileImage());
-                 profileDto.setLocation(currentUser.getUserProfile().getLocation());
-                 profileDto.setTrustScore(currentUser.getUserProfile().getTrustScore());
-                 profileDto.setBadgeLevel(currentUser.getUserProfile().getBadgeLevel());
-                 profileDto.setUser(userSummeryDto);
-                 profileDto.setProfileId(currentUser.getUserProfile().getProfileId());
-
-        }
-
-
-        return ResponseEntity.ok(profileDto);
+        return profileRepository.findById(id)
+                .map(p -> ResponseEntity.ok(ProfileUtilMethods.createResponseDtoFromProfile(p, ratingService)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .<ProfileResponseDto>build());
     }
 
     public ResponseEntity<?> getProfileByUserId(Long userId) {
+        User user = userUtilService.getUserById(userId);
+        return profileRepository.findByUser(user)
+                .map(p -> ResponseEntity.ok(ProfileUtilMethods.createResponseDtoFromProfile(p, ratingService)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .<ProfileResponseDto>build());
+    }
 
-        User user= userUtilService.getUserById(userId);
-
-        if( user !=null )
-        {
-            UserProfile profile= profileRepository.findByUser(user).get();
-            return ResponseEntity.status(HttpStatus.OK).body(ProfileUtilMethods.createResponseDtoFromProfile(profile));
+    public ResponseEntity<?> updateProfile(ProfileRequestDto dto) {
+        User user = userUtilService.getCurrentlyAuthenticatedUser();
+        Optional<UserProfile> opt = profileRepository.findByUser(user);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Create a profile first before updating");
         }
-        else
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The id "+userId +" is wrong");
+        UserProfile profile = opt.get();
+        profile.setBio(dto.getBio());
+        profile.setLocation(dto.getLocation());
+        profile.setProfileImage(dto.getProfileImage());
+        UserProfile saved = profileRepository.save(profile);
+        return ResponseEntity.ok(ProfileUtilMethods.createResponseDtoFromProfile(saved, ratingService));
+    }
 
+    public ResponseEntity<ProfileResponseDto> getMyProfile() {
+        User currentUser = userUtilService.getCurrentlyAuthenticatedUser();
+        UserProfile profile = profileRepository.findByUser(currentUser).orElse(null);
+        if (profile == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(ProfileUtilMethods.createResponseDtoFromProfile(profile, ratingService));
     }
 }
-

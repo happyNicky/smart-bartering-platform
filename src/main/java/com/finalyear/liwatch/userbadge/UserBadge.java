@@ -1,6 +1,5 @@
 package com.finalyear.liwatch.userbadge;
 
-
 import com.finalyear.liwatch.userprofile.enums.BadgeLevel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_badge")
+@Table(name = "user_badges")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,6 +27,9 @@ public class UserBadge {
     @Column(name = "badge_level", nullable = false)
     private BadgeLevel badgeLevel;
 
+    @Column(name = "trust_score_at_award", precision = 3, scale = 2, nullable = false)
+    private BigDecimal trustScoreAtAward;
+
     @Column(name = "total_swaps")
     private Integer totalSwaps = 0;
 
@@ -39,6 +41,4 @@ public class UserBadge {
 
     @Column(name = "awarded_at", nullable = false)
     private LocalDateTime awardedAt;
-
-
 }

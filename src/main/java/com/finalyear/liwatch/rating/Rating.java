@@ -1,14 +1,17 @@
 package com.finalyear.liwatch.rating;
 
-
-
+import com.finalyear.liwatch.barter.Barter;
 import com.finalyear.liwatch.userManagement.model.User;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ratings")
+@Table(
+        name = "ratings",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"barter_id", "from_user_id"})
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,17 +23,27 @@ public class Rating {
     @Column(name = "rating_id")
     private Long ratingId;
 
-    @ManyToOne
-    @JoinColumn(name = "from_user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_user_id", nullable = false)
     private User fromUser;
 
-    @ManyToOne
-    @JoinColumn(name = "to_user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_user_id", nullable = false)
     private User toUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "barter_id", nullable = false)
+    private Barter barter;
 
     @Column(nullable = false)
     private Integer score;
 
+    @Column(name = "is_published", nullable = false)
+    private Boolean isPublished = false;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
 }

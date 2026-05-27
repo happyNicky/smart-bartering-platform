@@ -28,11 +28,13 @@ public class UserProfile {
     private String bio;
 
     @Column(name = "trust_score", precision = 3, scale = 2)
-    private BigDecimal trustScore;
+    @Builder.Default
+    private BigDecimal trustScore = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "badge_level")
-    private BadgeLevel badgeLevel;
+    @Builder.Default
+    private BadgeLevel badgeLevel = BadgeLevel.LEVEL_1;
 
     @Column(name = "profile_image", length = 255)
     private String profileImage;

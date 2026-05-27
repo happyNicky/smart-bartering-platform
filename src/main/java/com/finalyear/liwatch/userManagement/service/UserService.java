@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,17 +25,20 @@ import java.util.UUID;
 @Service
 public class UserService {
 
-
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final EmailSendingService emailSendingService;
 
-
-    private final  EmailSendingService emailSendingService;
-
-    public UserService(UserRepository userRepository, PasswordResetTokenRepository tokenRepository, BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, EmailSendingService emailSendingService) {
+    public UserService(
+            UserRepository userRepository,
+            PasswordResetTokenRepository tokenRepository,
+            BCryptPasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtService jwtService,
+            EmailSendingService emailSendingService) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -46,148 +48,106 @@ public class UserService {
     }
 
     @Transactional
-    public User register(RegisterUserDto user) {
+    public User register(RegisterUserDto dto) {
+        Optional<User> existing = userRepository.findByEmail(dto.getEmail());
+        if (existing.isPresent()) {
+            User u = existing.get();
+            if (u.isEnabled()) {
+                throw new IllegalArgumentException("Email already in use: " + dto.getEmail());
+            }
+            String token = UUID.randomUUID().toString();
+            u.setVerificationToken(token);
+            u.setTokenExpiry(LocalDateTime.now().plusHours(24));
+            userRepository.save(u);
+            emailSendingService.sendVerificationEmail(dto.getEmail(), token);
+            return u;
+        }
 
-       Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-       if(existingUser.isPresent())
-       {
-           User use= existingUser.get();
-           if(use.isEnabled())
-           {   throw new IllegalArgumentException("Email already in use: " + user.getEmail());
-           }
-           String token = UUID.randomUUID().toString();
-
-           use.setVerificationToken(token);
-           use.setTokenExpiry(LocalDateTime.now().plusHours(24));
-
-           userRepository.save(use);
-           emailSendingService.sendVerificationEmail(user.getEmail(), token);
-           return use;
-
-       }
-
-
-        User u= new User();
-        u.setFullName(user.getFullName());
-        u.setEmail(user.getEmail());
-        u.setPassword(passwordEncoder.encode(user.getPassword()));
+        User u = new User();
+        u.setFullName(dto.getFullName());
+        u.setEmail(dto.getEmail());
+        u.setPassword(passwordEncoder.encode(dto.getPassword()));
+        u.setCreatedAt(LocalDateTime.now());
         String token = UUID.randomUUID().toString();
-
         u.setVerificationToken(token);
         u.setTokenExpiry(LocalDateTime.now().plusHours(24));
         userRepository.save(u);
-        emailSendingService.sendVerificationEmail(user.getEmail(), token);
+        emailSendingService.sendVerificationEmail(dto.getEmail(), token);
         return u;
     }
 
-    public ResponseEntity<? extends Object> verify(LoginUserDto user) {
-
-        Optional<User> existingUser= userRepository.findByEmail(user.getEmail());
-        if(existingUser.isPresent () && ! existingUser.get().isEnabled())
-        {
-
-            return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body("Please verify your email first");
+    public ResponseEntity<?> verify(LoginUserDto dto) {
+        Optional<User> existing = userRepository.findByEmail(dto.getEmail());
+        if (existing.isPresent() && !existing.get().isEnabled()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Please verify your email first");
         }
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
-            );
-
-            User u = userRepository.findByEmail(user.getEmail())
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword()));
+            userRepository.findByEmail(dto.getEmail())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            String token = jwtService.generateToken(user);
-
-            return ResponseEntity.ok(Map.of(
-                    "token", token,
-                    "email", user.getEmail()
-            ));
+            String token = jwtService.generateToken(dto);
+            return ResponseEntity.ok(Map.of("token", token, "email", dto.getEmail()));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
         }
     }
 
-
+    @Transactional
     public ResponseEntity<?> emailVarify(String token) {
-
-        User user =  userRepository.findByVerificationToken(token)
+        User user = userRepository.findByVerificationToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
-
-        if(user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
             return ResponseEntity.badRequest().body("Token expired");
         }
-
         user.setEnabled(true);
         user.setVerificationToken(null);
         user.setTokenExpiry(null);
+        if (user.getCreatedAt() == null) {
+            user.setCreatedAt(LocalDateTime.now());
+        }
         UserProfile profile = new UserProfile();
         profile.setUser(user);
         profile.setLocation("");
         user.setUserProfile(profile);
         userRepository.save(user);
-
         return ResponseEntity.ok("Email verified successfully");
     }
 
-    public User getUser(Long id){
-        return userRepository.findById(id).orElseThrow(
-                ()-> new RuntimeException("Swap Request not found!")
-        );
+    public User getUser(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found: " + id));
     }
-
 
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
-
         if (resetToken.isExpired()) {
             throw new RuntimeException("Token expired");
         }
-
         User user = resetToken.getUser();
-
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-
         tokenRepository.delete(resetToken);
     }
 
     public boolean validateToken(String token) {
-        Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(token);
-
-        if (tokenOpt.isEmpty()) return false;
-
-        PasswordResetToken resetToken = tokenOpt.get();
-
-        return !resetToken.isExpired();
+        return tokenRepository.findByToken(token)
+                .map(t -> !t.isExpired())
+                .orElse(false);
     }
-
 
     public void createPasswordResetToken(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-
-        // Always return success (don't reveal if email exists)
         if (userOpt.isEmpty()) return;
-
         User user = userOpt.get();
-
-        // delete existing token
         tokenRepository.deleteByUser(user);
-
         String token = UUID.randomUUID().toString();
-
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
         resetToken.setUser(user);
         resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
-
         tokenRepository.save(resetToken);
-
-        emailSendingService.sendPasswordResetEmail(user.getEmail(),token);
+        emailSendingService.sendPasswordResetEmail(user.getEmail(), token);
     }
-
-
 }
-

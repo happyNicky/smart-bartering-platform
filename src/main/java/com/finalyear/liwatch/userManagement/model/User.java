@@ -46,6 +46,9 @@ public class User {
     private String verificationToken;
 
     private LocalDateTime tokenExpiry;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProfile userProfile;
 

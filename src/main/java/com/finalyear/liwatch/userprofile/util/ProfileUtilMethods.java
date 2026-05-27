@@ -1,29 +1,44 @@
 package com.finalyear.liwatch.userprofile.util;
 
+import com.finalyear.liwatch.rating.service.RatingService;
 import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userprofile.ProfileResponseDto;
 import com.finalyear.liwatch.userprofile.UserProfile;
+import com.finalyear.liwatch.userprofile.enums.BadgeLevel;
 
 public class ProfileUtilMethods {
 
-    public static ProfileResponseDto createResponseDtoFromProfile(UserProfile profile)
-    {
-        //get user
-        User user= profile.getUser();
-        UserSummeryDto userSummeryDto= new UserSummeryDto(user.getId(), user.getFullName(), user.getEmail());
+    public static ProfileResponseDto createResponseDtoFromProfile(UserProfile profile, RatingService ratingService) {
+        User user = profile.getUser();
+        UserSummeryDto userDto = new UserSummeryDto(user.getId(), user.getFullName(), user.getEmail());
 
-        ProfileResponseDto profileResponseDto= new ProfileResponseDto();
-        profileResponseDto.setProfileImage(profile.getProfileImage());
-        profileResponseDto.setProfileId(profile.getProfileId());
-        profileResponseDto.setBio(profile.getBio());
-        profileResponseDto.setLocation(profile.getLocation());
-        profileResponseDto.setTrustScore(profile.getTrustScore());
-        profileResponseDto.setBadgeLevel(profile.getBadgeLevel());
-        profileResponseDto.setUser(userSummeryDto);
+        BadgeLevel level = profile.getBadgeLevel() != null ? profile.getBadgeLevel() : BadgeLevel.LEVEL_1;
 
-        return  profileResponseDto;
+        ProfileResponseDto dto = new ProfileResponseDto();
+        dto.setProfileId(profile.getProfileId());
+        dto.setLocation(profile.getLocation());
+        dto.setBio(profile.getBio());
+        dto.setTrustScore(profile.getTrustScore());
+        dto.setBadgeLevel(level);
+        dto.setBadgeLabel(level.getLabel());
+        dto.setProfileImage(profile.getProfileImage());
+        dto.setUser(userDto);
 
+        if (ratingService != null) {
+            var published = ratingService.getPublishedRatingsForUser(user.getId());
+            dto.setReviews(published.stream().map(r -> {
+                ProfileResponseDto.PublishedReviewDto rev = new ProfileResponseDto.PublishedReviewDto();
+                rev.setRatingId(r.getRatingId());
+                rev.setFromUserId(r.getFromUserId());
+                rev.setFromUserName(r.getFromUserName());
+                rev.setScore(r.getScore());
+                rev.setComment(r.getComment());
+                rev.setPublishedAt(r.getPublishedAt());
+                return rev;
+            }).toList());
+        }
+
+        return dto;
     }
-
 }
