@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +26,10 @@ public class ChatController {
         template.convertAndSend( "/barter/" + messageDto.getNegotiationId(),
                 chat);
     }
+
+
+
+
 //    @PostMapping("/get-all-chat/{id}")
 //    public ResponseEntity<List<Chat>> getAllChat(@PathVariable long id){
 //        return ResponseEntity.ok(chatService.getAllChat(id));

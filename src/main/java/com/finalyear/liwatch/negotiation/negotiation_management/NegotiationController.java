@@ -4,10 +4,7 @@ import com.finalyear.liwatch.chat.Chat;
 import com.finalyear.liwatch.negotiation.Negotiation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,5 +53,9 @@ public class NegotiationController {
         }).collect(java.util.stream.Collectors.toList());
 
         return ResponseEntity.ok(responseDtos);
+    }
+    @GetMapping("/chat/fetch/{id}")
+    public void getChatOfNegotiation(@PathVariable("id")Long id){
+        negotiationService.getChatsOfNegotiation(id);
     }
 }
