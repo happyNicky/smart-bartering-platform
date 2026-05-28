@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/oauth")
+@RequestMapping("/api/auth/oauth2")
 public class OauthUserController {
 
     private final JwtService jwtService;

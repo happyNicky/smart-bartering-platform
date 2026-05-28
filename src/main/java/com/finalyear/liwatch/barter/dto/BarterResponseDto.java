@@ -1,6 +1,9 @@
 package com.finalyear.liwatch.barter.dto;
+import com.finalyear.liwatch.Post.PostResponseDto;
+import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class BarterResponseDto {
 
     private Long id;
@@ -16,9 +20,9 @@ public class BarterResponseDto {
 
     private Long swapRequestId;
 
-    private Long userAId;
-    private Long userBId;
+    private UserSummeryDto userA;
+    private UserSummeryDto userB;
 
-    private Long postAId;
-    private Long postBId;
+    private PostResponseDto postA;
+    private PostResponseDto postB;
 }

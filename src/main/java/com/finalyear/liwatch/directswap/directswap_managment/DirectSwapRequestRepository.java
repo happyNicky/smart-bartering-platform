@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface DirectSwapRequestRepository  extends JpaRepository<DirectSwapRequest,Long> {
 
-    boolean existsByRequestSenderAndOfferedPost(User requestSender, Post offeredPost);
+    boolean existsByRequestSenderAndRequestedPost(User requestSender, Post requestedPost);
 
     List<DirectSwapRequest> findByRequestReceiverAndRequestedPost(User requestReceiver, Post requestedPost);
     List<DirectSwapRequest> findByRequestReceiver(User requestReceiver);
