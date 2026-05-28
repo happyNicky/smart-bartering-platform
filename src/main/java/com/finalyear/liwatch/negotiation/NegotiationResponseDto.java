@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,6 +19,11 @@ public class NegotiationResponseDto {
     private Long id;
     private Double fairnessScore;
     private NegotiationStatus status;
+    private String fairValueSuggestion;
+    private LocalDateTime suggestionUpdatedAt;
+    private String suggestionBadge;
+    private String suggestionBadgeColor;
+    private String suggestionAdvice;
     private BarterResponseDto barter;
     private List<ChatDto> messages;
 }

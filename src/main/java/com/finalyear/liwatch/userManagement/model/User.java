@@ -73,4 +73,7 @@ public class User {
     private List<Barter> bartersAsUserB;
 
 
+
+
+
 }

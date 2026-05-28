@@ -18,8 +18,20 @@ import java.util.List;
 
 public class DigitalAgreement {
 
+
     @Id @GeneratedValue
     private Long id;
+    @Column(name = "user_a_signed")
+    private boolean userASigned = false;
+
+    @Column(name = "user_b_signed")
+    private boolean userBSigned = false;
+
+    @Column(name = "document_hash", length = 64)
+    private String documentHash;
+
+    @Column(name = "agreement_terms", columnDefinition = "TEXT")
+    private String agreementTerms;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Barter barter;

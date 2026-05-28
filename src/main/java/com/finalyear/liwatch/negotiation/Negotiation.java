@@ -7,6 +7,7 @@ import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -28,6 +29,12 @@ public class Negotiation {
 
     @Enumerated(EnumType.STRING)
     private NegotiationStatus status;
+
+    @Column(name = "fair_value_suggestion", columnDefinition = "TEXT")
+    private String fairValueSuggestion;
+
+    @Column(name = "suggestion_updated_at")
+    private LocalDateTime suggestionUpdatedAt;
 
     //  one negotiation will have many messages
     @OneToMany(mappedBy = "negotiation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
