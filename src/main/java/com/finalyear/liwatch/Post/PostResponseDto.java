@@ -1,7 +1,6 @@
 package com.finalyear.liwatch.Post;
 
 import com.finalyear.liwatch.Item.ItemRequestDto;
-import com.finalyear.liwatch.Post.enums.ExchangeType;
 import com.finalyear.liwatch.Post.enums.PostType;
 import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.media.postMedia.PostMedia;
@@ -26,7 +25,6 @@ public class PostResponseDto {
     private String category;
     private String location;
     private String lookingFor;
-    private ExchangeType exchangeType;
     private Status status;
     private PostType postType;
     private LocalDateTime createdAt;
@@ -37,12 +35,11 @@ public class PostResponseDto {
     private Long groupId;
     private Boolean isGroupOnly;
 
-    public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ItemRequestDto itemRequestDto,String location, String lookingFor) {
+    public PostResponseDto(Long postId, String title, String description, String category, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ItemRequestDto itemRequestDto,String location, String lookingFor) {
         this.postId = postId;
         this.title = title;
         this.description = description;
         this.category = category;
-        this.exchangeType = exchangeType;
         this.status = status;
         this.postType = postType;
         this.createdAt = createdAt;
@@ -53,12 +50,11 @@ public class PostResponseDto {
         this.lookingFor=lookingFor;
     }
 
-    public PostResponseDto(Long postId, String title, String description, String category, ExchangeType exchangeType, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ServiceRequestDto serviceRequestDto,String location, String lookingFor) {
+    public PostResponseDto(Long postId, String title, String description, String category, Status status, PostType postType, LocalDateTime createdAt, List<PostMediaDto> mediaDtos, UserSummeryDto userDto, ServiceRequestDto serviceRequestDto,String location, String lookingFor) {
         this.postId = postId;
         this.title = title;
         this.description = description;
         this.category = category;
-        this.exchangeType = exchangeType;
         this.status = status;
         this.postType = postType;
         this.createdAt = createdAt;

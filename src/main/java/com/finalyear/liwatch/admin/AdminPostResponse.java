@@ -14,7 +14,6 @@ public class AdminPostResponse {
     private String title;
     private String description;
     private String category;
-    private String exchangeType;
     private String postType;
     private String status;
     private String location;
@@ -38,7 +37,6 @@ public class AdminPostResponse {
                 .title(post.getTitle())
                 .description(post.getDescription())
                 .category(post.getCategory())
-                .exchangeType(post.getExchangeType() != null ? post.getExchangeType().name() : null)
                 .postType(post.getPostType() != null ? post.getPostType().name() : null)
                 .status(post.getStatus() != null ? post.getStatus().name() : null)
                 .location(post.getLocation())

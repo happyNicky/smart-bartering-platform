@@ -17,6 +17,13 @@ public class AdminReportResponse {
     private LocalDateTime createdAt;
     private LocalDateTime validatedAt;
 
+    private String targetType;
+    private String issueType;
+    private String evidenceUrl;
+
+    private Long reportedPostId;
+    private Long reportedBarterId;
+
     // reported user
     private Long reportedUserId;
     private String reportedUserName;
@@ -34,6 +41,11 @@ public class AdminReportResponse {
                 .reason(report.getReason())
                 .createdAt(report.getCreatedAt())
                 .validatedAt(report.getValidatedAt())
+                .targetType(report.getTargetType() != null ? report.getTargetType().name() : null)
+                .issueType(report.getIssueType() != null ? report.getIssueType().name() : null)
+                .evidenceUrl(report.getEvidenceUrl())
+                .reportedPostId(report.getReportedPost() != null ? report.getReportedPost().getPostId() : null)
+                .reportedBarterId(report.getReportedBarter() != null ? report.getReportedBarter().getId() : null)
                 .reportedUserId(report.getReportedUser() != null ? report.getReportedUser().getId() : null)
                 .reportedUserName(report.getReportedUser() != null ? report.getReportedUser().getFullName() : null)
                 .reportedUserEmail(report.getReportedUser() != null ? report.getReportedUser().getEmail() : null)

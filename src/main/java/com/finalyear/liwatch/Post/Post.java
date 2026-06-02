@@ -2,7 +2,6 @@ package com.finalyear.liwatch.Post;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.finalyear.liwatch.Item.Item;
-import com.finalyear.liwatch.Post.enums.ExchangeType;
 import com.finalyear.liwatch.Post.enums.PostType;
 import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.directswap.DirectSwapRequest;
@@ -43,9 +42,7 @@ public class Post {
     @Column(nullable = false, length = 100)
     protected String category;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "exchange_type")
-    protected ExchangeType exchangeType;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type",nullable = false)
@@ -81,4 +78,7 @@ public class Post {
 
     @Column(name = "is_group_only")
     protected Boolean isGroupOnly = false;
+
+    @Column(name = "is_visible")
+    protected Boolean isVisible = true;
 }

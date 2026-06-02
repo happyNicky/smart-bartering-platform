@@ -1,9 +1,11 @@
 package com.finalyear.liwatch.Notification;
 
 import com.finalyear.liwatch.Notification.enum_notification.Status;
+import com.finalyear.liwatch.userManagement.service.EmailSendingService;
 import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,13 +16,16 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserUtilService userUtilService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final EmailSendingService emailSendingService;
 
     public NotificationService(NotificationRepository notificationRepository,
                                UserUtilService userUtilService,
-                               SimpMessagingTemplate messagingTemplate) {
+                               SimpMessagingTemplate messagingTemplate,
+                               EmailSendingService emailSendingService) {
         this.notificationRepository = notificationRepository;
         this.userUtilService = userUtilService;
         this.messagingTemplate = messagingTemplate;
+        this.emailSendingService = emailSendingService;
     }
 
     public List<Notification> getUserNotifications() {
@@ -33,35 +38,46 @@ public class NotificationService {
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
 
+    @Transactional
     public void markAsRead(Long id) {
         Long userId = userUtilService.getCurrentlyAuthenticatedUser().getId();
-        Notification notification = notificationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
-        
-        if (!notification.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
-        }
-        
-        notification.setRead(true);
-        notificationRepository.save(notification);
+        notificationRepository.markAsReadByIdAndUserId(id, userId);
     }
 
+    @Transactional
     public void markAllAsRead() {
         Long userId = userUtilService.getCurrentlyAuthenticatedUser().getId();
-        List<Notification> unread = notificationRepository.findByUserIdOrderBySentAtDesc(userId)
-                .stream().filter(n -> !n.isRead()).toList();
-        unread.forEach(n -> n.setRead(true));
-        notificationRepository.saveAll(unread);
+        notificationRepository.markAllAsReadByUserId(userId);
+    }
+
+    @Transactional
+    public void deleteNotification(Long id) {
+        Long userId = userUtilService.getCurrentlyAuthenticatedUser().getId();
+        notificationRepository.deleteByEmailNotificationIdAndUserId(id, userId);
+    }
+
+    @Transactional
+    public void deleteAllNotifications() {
+        Long userId = userUtilService.getCurrentlyAuthenticatedUser().getId();
+        notificationRepository.deleteByUserId(userId);
     }
 
     public Notification createNotification(Long userId, String emailAddress, String subject, String body, String type) {
+        boolean skipEmail = "Message".equals(type) 
+                || (type != null && (
+                    type.startsWith("SWAP_") 
+                    || type.startsWith("BARTER_")
+                    || type.startsWith("RATING_")
+                    || type.startsWith("BADGE_")
+                   ));
+
         Notification notification = Notification.builder()
                 .userId(userId)
                 .emailAddress(emailAddress)
                 .subject(subject)
                 .body(body)
                 .type(type)
-                .status(Status.PENDING)
+                .status(skipEmail ? Status.SENT : Status.PENDING)
                 .sentAt(LocalDateTime.now())
                 .isRead(false)
                 .build();
@@ -79,6 +95,15 @@ public class NotificationService {
                 .build();
         
         messagingTemplate.convertAndSend("/topic/notifications/" + userId, dto);
+
+        // Send email asynchronously and immediately
+        if (!skipEmail) {
+            try {
+                emailSendingService.sendNotificationEmailAsync(saved);
+            } catch (Exception e) {
+                // Log warning, scheduler will pick it up if it stays PENDING
+            }
+        }
 
         return saved;
     }

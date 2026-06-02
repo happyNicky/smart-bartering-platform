@@ -33,6 +33,25 @@ public class CommunityGroup {
     @Column(name = "owner_user_id", nullable = false)
     private Long ownerUserId;
 
+    @Column(name = "is_private", nullable = false)
+    @Builder.Default
+    private Boolean isPrivate = false;
+
+    @Column(name = "group_category", nullable = true)
+    private String groupCategory;
+
+    @Column(name = "item_subcategory", nullable = true)
+    private String itemSubcategory;
+
+    @Column(name = "cover_image_url", nullable = true, length = 500)
+    private String coverImageUrl;
+
+    @Transient
+    private Long memberCount;
+
+    @Transient
+    private Double groupAverageRating;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

@@ -11,6 +11,7 @@ public class RatingResponseDto {
     private Long ratingId;
     private Long fromUserId;
     private String fromUserName;
+    private String fromUserProfileImage;
     private Integer score;
     private String comment;
     private LocalDateTime publishedAt;

@@ -18,6 +18,7 @@ import com.finalyear.liwatch.userManagement.DTO.UserSummeryDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.service.UserService;
 import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
+import com.finalyear.liwatch.Notification.NotificationService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,9 @@ public class DirectSwapRequestService {
     @Autowired
     private UserUtilService userUtilService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public DirectSwapRequest getSwapRequest(Long id) {
         return directSwapRequestRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Swap Request not found!")
@@ -50,14 +54,7 @@ public class DirectSwapRequestService {
     }
 
     private UserSummeryDto toUserDto(User user) {
-        if (user == null) {
-            return null;
-        }
-        return new UserSummeryDto(
-                user.getId(),
-                user.getFullName(),
-                user.getEmail()
-        );
+        return UserSummeryDto.from(user);
     }
 
     private PostResponseDto toPostDto(Post post) {
@@ -65,13 +62,7 @@ public class DirectSwapRequestService {
             return null;
         }
 
-        UserSummeryDto userDto = post.getUser() != null
-                ? new UserSummeryDto(
-                post.getUser().getId(),
-                post.getUser().getFullName(),
-                post.getUser().getEmail()
-        )
-                : null;
+        UserSummeryDto userDto = UserSummeryDto.from(post.getUser());
 
         List<PostMediaDto> mediaDtos = post.getPostImages() == null
                 ? List.of()
@@ -93,7 +84,6 @@ public class DirectSwapRequestService {
                 post.getTitle(),
                 post.getDescription(),
                 post.getCategory(),
-                post.getExchangeType(),
                 post.getStatus(),
                 post.getPostType(),
                 post.getCreatedAt(),
@@ -126,6 +116,7 @@ public class DirectSwapRequestService {
         );
     }
 
+    @Transactional
     public String makeRequest(CreateDirectSwapRequestDto dto) {
         User requestSender = userUtilService.getCurrentlyAuthenticatedUser();
         User requestReceiver = userService.getUser(dto.getReceiverId());
@@ -141,6 +132,20 @@ public class DirectSwapRequestService {
         directSwapRequest.setCreatedAt(LocalDateTime.now());
 
         directSwapRequestRepository.save(directSwapRequest);
+
+        try {
+            notificationService.createNotification(
+                    requestReceiver.getId(),
+                    requestReceiver.getEmail(),
+                    "New Swap Request",
+                    requestSender.getFullName() + " has requested to swap their '" + offeredPost.getTitle() + "' for your '" + requestedPost.getTitle() + "'.",
+                    "SWAP_REQUEST"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Failed to send notification: " + e.getMessage());
+        }
+
         return "Request has been sent!";
     }
 
@@ -164,7 +169,49 @@ public class DirectSwapRequestService {
         swapRequest.setBarter(barter);
         directSwapRequestRepository.save(swapRequest);
 
+        try {
+            notificationService.createNotification(
+                    swapRequest.getRequestSender().getId(),
+                    swapRequest.getRequestSender().getEmail(),
+                    "Swap Request Accepted",
+                    swapRequest.getRequestReceiver().getFullName() + " has accepted your request to swap '" + swapRequest.getOfferedPost().getTitle() + "' for '" + swapRequest.getRequestedPost().getTitle() + "'.",
+                    "SWAP_ACCEPTED"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return "Request Accept";
+    }
+
+    @Transactional
+    public String declineRequest(Long id) {
+        long declinerID = userUtilService.getCurrentlyAuthenticatedUser().getId();
+        DirectSwapRequest swapRequest = getSwapRequest(id);
+
+        if (!swapRequest.getRequestReceiver().getId().equals(declinerID)) {
+            throw new RuntimeException("You are not allowed to decline this request");
+        }
+        if (swapRequest.getStatus() != RequestStatus.PENDING) {
+            throw new RuntimeException("Request already processed");
+        }
+
+        swapRequest.setStatus(RequestStatus.DECLINED);
+        directSwapRequestRepository.save(swapRequest);
+
+        try {
+            notificationService.createNotification(
+                    swapRequest.getRequestSender().getId(),
+                    swapRequest.getRequestSender().getEmail(),
+                    "Swap Request Declined",
+                    swapRequest.getRequestReceiver().getFullName() + " has declined your request to swap '" + swapRequest.getOfferedPost().getTitle() + "' for '" + swapRequest.getRequestedPost().getTitle() + "'.",
+                    "SWAP_DECLINED"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return "Request Declined";
     }
 
     public boolean checkRequestMade(long userId, long postId) {
@@ -212,10 +259,28 @@ public class DirectSwapRequestService {
     public List<DirectSwapRequestResponseDto> getMyRequests() {
         User user = userUtilService.getCurrentlyAuthenticatedUser();
 
-        return directSwapRequestRepository.findByRequestReceiverOrRequestSender(user,null)
+        return directSwapRequestRepository.findByRequestReceiverOrRequestSender(user, user)
                 .stream()
                 .filter(request -> request.getStatus() == RequestStatus.PENDING)
                 .map(this::toDto)
                 .toList();
+    }
+
+    @Transactional
+    public String cancelRequest(Long id) {
+        long senderID = userUtilService.getCurrentlyAuthenticatedUser().getId();
+        DirectSwapRequest swapRequest = getSwapRequest(id);
+
+        if (!swapRequest.getRequestSender().getId().equals(senderID)) {
+            throw new RuntimeException("You are not allowed to cancel this request");
+        }
+        if (swapRequest.getStatus() != RequestStatus.PENDING) {
+            throw new RuntimeException("Request already processed");
+        }
+
+        swapRequest.setStatus(RequestStatus.CANCELED);
+        directSwapRequestRepository.save(swapRequest);
+
+        return "Request Canceled";
     }
 }

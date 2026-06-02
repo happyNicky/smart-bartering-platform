@@ -26,7 +26,7 @@ public class GroupChatController {
     @MessageMapping("/group.send")
     public void sendMessage(@Payload GroupMessageDto messageDto) {
         // Save the message using the service, which also validates the user's membership
-        GroupChatMessage savedMessage = communityGroupService.saveGroupMessage(messageDto.getGroupId(), messageDto.getContent());
+        GroupChatMessage savedMessage = communityGroupService.saveGroupMessage(messageDto.getGroupId(), messageDto.getSenderId(), messageDto.getContent());
 
         // Broadcast the saved message to all subscribers of this group's topic
         messagingTemplate.convertAndSend("/group/" + messageDto.getGroupId(), savedMessage);

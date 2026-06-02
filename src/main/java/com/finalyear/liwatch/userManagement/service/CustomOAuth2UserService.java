@@ -23,9 +23,16 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         // Extract information from OAuth2 provider
         String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+        if (name == null || name.isBlank()) {
+            name = oAuth2User.getAttribute("given_name");
+        }
+        if (name == null || name.isBlank()) {
+            name = email != null ? email.split("@")[0] : "Google User";
+        }
 
         // Map to your user DB (create or update)
-        oAuthUserService.createOrUpdateUser(email);
+        oAuthUserService.createOrUpdateUser(email, name);
 
         return oAuth2User;
     }

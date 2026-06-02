@@ -23,8 +23,20 @@ public class ChatController {
     @MessageMapping("/chat.send")
     public void sendMessage(MessageDto messageDto){
         Chat chat= chatService.saveMessage(messageDto);
+        com.finalyear.liwatch.chat.ChatDto chatDto = com.finalyear.liwatch.chat.ChatDto.builder()
+                .id(chat.getId())
+                .negotiationId(chat.getNegotiation() != null ? chat.getNegotiation().getId() : null)
+                .senderId(chat.getSender() != null ? chat.getSender().getId() : null)
+                .messageText(chat.getMessageText())
+                .isEncrypted(chat.isEncrypted())
+                .isRead(chat.isRead())
+                .fileUrl(chat.getFileUrl())
+                .fileName(chat.getFileName())
+                .fileType(chat.getFileType())
+                .sentAt(chat.getSentAt())
+                .build();
         template.convertAndSend( "/barter/" + messageDto.getNegotiationId(),
-                chat);
+                chatDto);
     }
 
 

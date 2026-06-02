@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GroupMessageDto {
     private Long groupId;
+    private Long senderId;
     private String content;
 }

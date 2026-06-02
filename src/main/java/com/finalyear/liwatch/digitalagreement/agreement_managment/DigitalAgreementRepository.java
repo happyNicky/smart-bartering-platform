@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface DigitalAgreementRepository extends JpaRepository<DigitalAgreement,Long> {
     Optional<DigitalAgreement> findByBarterId(Long barterId);
+    Optional<DigitalAgreement> findByDocumentHash(String documentHash);
 }

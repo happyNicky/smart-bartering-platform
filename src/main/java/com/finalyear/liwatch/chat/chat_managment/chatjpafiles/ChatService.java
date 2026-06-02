@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.finalyear.liwatch.Notification.NotificationService;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +31,9 @@ public class ChatService {
     // 1. NEW: Autowire the UserRepository so we can fetch the user manually
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Transactional
     public Chat saveMessage(MessageDto dto) {
@@ -53,11 +57,39 @@ public class ChatService {
                 .negotiation(negotiation)
                 .sender(sender)
                 .messageText(dto.getContent())
+                .fileUrl(dto.getFileUrl())
+                .fileName(dto.getFileName())
+                .fileType(dto.getFileType())
                 .sentAt(LocalDateTime.now()) // Ensures timestamp is never null
                 .build();
 
+        Chat savedChat = chatRepository.save(chat);
+
+        // Identify recipient
+        User recipient = barter.getUserA().getId().equals(sender.getId()) ? barter.getUserB() : barter.getUserA();
+        if (recipient != null) {
+            String shortMessage = dto.getContent();
+            if (shortMessage == null || shortMessage.trim().isEmpty()) {
+                if (dto.getFileUrl() != null) {
+                    boolean isImage = dto.getFileType() != null && dto.getFileType().startsWith("image/");
+                    shortMessage = isImage ? "Sent an image" : "Sent a file: " + dto.getFileName();
+                } else {
+                    shortMessage = "Sent a message";
+                }
+            } else if (shortMessage.length() > 60) {
+                shortMessage = shortMessage.substring(0, 57) + "...";
+            }
+            notificationService.createNotification(
+                    recipient.getId(),
+                    recipient.getEmail(),
+                    "New message from " + sender.getFullName(),
+                    sender.getFullName() + ": " + shortMessage,
+                    "Message"
+            );
+        }
+
         // Saving the chat to db and returning the object
-        return chatRepository.save(chat);
+        return savedChat;
     }
 
     public List<Chat> getAllChat(long userId) {

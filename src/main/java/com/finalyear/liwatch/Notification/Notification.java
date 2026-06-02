@@ -42,4 +42,16 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private boolean isRead = false;
+
+    public boolean getIsRead() {
+        return this.isRead;
+    }
+
+    public boolean isRead() {
+        return this.isRead;
+    }
+
+    public void setIsRead(boolean isRead) {
+        this.isRead = isRead;
+    }
 }

@@ -1,6 +1,8 @@
 package com.finalyear.liwatch.admin;
 
 import com.finalyear.liwatch.userManagement.model.User;
+import com.finalyear.liwatch.userManagement.utils.enums.Status;
+import com.finalyear.liwatch.userManagement.utils.enums.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,8 +34,8 @@ public interface AdminUserRepository extends JpaRepository<User, Long> {
             """)
     Page<User> searchUsers(
             @Param("keyword") String keyword,
-            @Param("status")  String status,
-            @Param("role")    String role,
+            @Param("status")  Status status,
+            @Param("role")    Role role,
             Pageable pageable
     );
 
@@ -48,7 +50,7 @@ public interface AdminUserRepository extends JpaRepository<User, Long> {
 
     // ── Stats counts ──────────────────────────────────────────────────────────
 
-    long countByStatus(User.Status status);
+    long countByStatus(Status status);
 
     long countByIsVerified(boolean verified);
 

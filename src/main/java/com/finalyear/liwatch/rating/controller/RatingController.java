@@ -1,6 +1,7 @@
 package com.finalyear.liwatch.rating.controller;
 
 import com.finalyear.liwatch.rating.dto.RatingResponseDto;
+import com.finalyear.liwatch.rating.dto.RatingWindowDto;
 import com.finalyear.liwatch.rating.dto.SubmitRatingRequest;
 import com.finalyear.liwatch.rating.dto.UpdateRatingRequest;
 import com.finalyear.liwatch.rating.service.RatingPublicationService;
@@ -30,9 +31,25 @@ public class RatingController {
         this.ratingPublicationService = ratingPublicationService;
     }
 
+    @GetMapping("/api/ratings/barter/{barterId}/window")
+    public ResponseEntity<RatingWindowDto> getRatingWindowDetails(@PathVariable Long barterId) {
+        return ResponseEntity.ok(ratingService.getRatingWindowDetails(barterId));
+    }
+
+    @GetMapping("/api/ratings/cycle-barter/{cycleBarterId}")
+    public ResponseEntity<List<RatingResponseDto>> getCycleBarterRatings(@PathVariable Long cycleBarterId) {
+        return ResponseEntity.ok(ratingService.getCycleBarterRatings(cycleBarterId));
+    }
+
     @PostMapping("/api/ratings")
-    public ResponseEntity<RatingResponseDto> submitRating(@Valid @RequestBody SubmitRatingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ratingService.submitRating(request));
+    public ResponseEntity<?> submitRating(@Valid @RequestBody SubmitRatingRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(ratingService.submitRating(request));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Rating failed: " + e.getMessage() + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "None")));
+        }
     }
 
     @PutMapping("/api/ratings/{ratingId}")

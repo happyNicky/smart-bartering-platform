@@ -11,7 +11,7 @@ public class ProfileUtilMethods {
 
     public static ProfileResponseDto createResponseDtoFromProfile(UserProfile profile, RatingService ratingService) {
         User user = profile.getUser();
-        UserSummeryDto userDto = new UserSummeryDto(user.getId(), user.getFullName(), user.getEmail());
+        UserSummeryDto userDto = UserSummeryDto.from(user);
 
         BadgeLevel level = profile.getBadgeLevel() != null ? profile.getBadgeLevel() : BadgeLevel.LEVEL_1;
 
@@ -32,6 +32,7 @@ public class ProfileUtilMethods {
                 rev.setRatingId(r.getRatingId());
                 rev.setFromUserId(r.getFromUserId());
                 rev.setFromUserName(r.getFromUserName());
+                rev.setFromUserProfileImage(r.getFromUserProfileImage());
                 rev.setScore(r.getScore());
                 rev.setComment(r.getComment());
                 rev.setPublishedAt(r.getPublishedAt());

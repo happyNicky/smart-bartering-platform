@@ -25,6 +25,16 @@ public class DirectSwapRequestController {
         return ResponseEntity.ok(directSwapRequestService.acceptRequest(id));
     }
 
+    @PostMapping("decline-request/{id}")
+    public ResponseEntity<String> declineRequest(@PathVariable Long id){
+        return ResponseEntity.ok(directSwapRequestService.declineRequest(id));
+    }
+
+    @PostMapping("cancel-request/{id}")
+    public ResponseEntity<String> cancelRequest(@PathVariable Long id){
+        return ResponseEntity.ok(directSwapRequestService.cancelRequest(id));
+    }
+
     @PostMapping("check-request/{userId}/{postId}")
     public ResponseEntity<Boolean> checkRequest(@PathVariable long userId, @PathVariable long postId){
         return ResponseEntity.ok(directSwapRequestService.checkRequestMade(userId, postId));

@@ -14,6 +14,10 @@ public class MessageDto {
         @NumberFormat
         @NonNull
         private Integer senderId;
-        @NonNull
+        
         private String content;
+
+        private String fileUrl;
+        private String fileName;
+        private String fileType;
 }

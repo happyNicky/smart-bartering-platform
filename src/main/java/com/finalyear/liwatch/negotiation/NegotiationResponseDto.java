@@ -2,6 +2,7 @@ package com.finalyear.liwatch.negotiation;
 
 import com.finalyear.liwatch.barter.dto.BarterResponseDto;
 import com.finalyear.liwatch.chat.ChatDto;
+import com.finalyear.liwatch.digitalagreement.dto.DigitalAgreementDto;
 import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,4 +27,6 @@ public class NegotiationResponseDto {
     private String suggestionAdvice;
     private BarterResponseDto barter;
     private List<ChatDto> messages;
+    private DigitalAgreementDto agreement;
 }
+

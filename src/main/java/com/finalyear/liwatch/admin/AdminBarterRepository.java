@@ -1,6 +1,7 @@
 package com.finalyear.liwatch.admin;
 
 import com.finalyear.liwatch.barter.Barter;
+import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,7 +37,7 @@ public interface AdminBarterRepository extends JpaRepository<Barter, Long> {
             ORDER BY b.createdAt DESC
             """)
     Page<Barter> searchBarters(
-            @Param("negotiationStatus") String negotiationStatus,
+            @Param("negotiationStatus") NegotiationStatus negotiationStatus,
             @Param("keyword")           String keyword,
             Pageable pageable
     );
@@ -75,16 +76,20 @@ public interface AdminBarterRepository extends JpaRepository<Barter, Long> {
     // ── Stats ─────────────────────────────────────────────────────────────────
 
     @Query("""
-            SELECT COUNT(b) FROM Barter b
-            LEFT JOIN b.negotiation n
-            WHERE n.status = 'AGREED'
+            SELECT COUNT(DISTINCT b) FROM Barter b
+            JOIN b.agreements da
+            WHERE da.type = 'FINALIZED'
             """)
     long countCompleted();
 
     @Query("""
-            SELECT COUNT(b) FROM Barter b
+            SELECT COUNT(DISTINCT b) FROM Barter b
             LEFT JOIN b.negotiation n
+            LEFT JOIN b.agreements da
             WHERE n.status = 'PENDING'
+               OR (n.status = 'AGREED'
+                   AND (da IS NULL OR (da.status != 'CANCELED' AND da.type != 'FINALIZED'))
+                  )
             """)
     long countActive();
 }

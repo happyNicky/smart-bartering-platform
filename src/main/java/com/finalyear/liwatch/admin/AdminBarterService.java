@@ -4,6 +4,9 @@ import com.finalyear.liwatch.barter.Barter;
 import com.finalyear.liwatch.directswap.DirectSwapRequest;
 import com.finalyear.liwatch.directswap.request_enum.RequestStatus;
 import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
+import com.finalyear.liwatch.digitalagreement.DigitalAgreement;
+import com.finalyear.liwatch.digitalagreement.agreement_managment.DigitalAgreementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -22,14 +26,22 @@ public class AdminBarterService {
 
     private final AdminBarterRepository      barterRepo;
     private final AdminDirectSwapRepository  swapRepo;
+    private final AdminActionLogRepository   logRepo;
+    private final UserUtilService            userUtil;
+    private final DigitalAgreementRepository  digitalAgreementRepository;
 
     // ── List all barters ──────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public AdminApiResponse<List<AdminBarterResponse>> listBarters(
-            String negotiationStatus,
+            String negotiationStatusStr,
             String keyword,
             Pageable pageable) {
+
+        NegotiationStatus negotiationStatus = null;
+        if (negotiationStatusStr != null && !negotiationStatusStr.isBlank()) {
+            try { negotiationStatus = NegotiationStatus.valueOf(negotiationStatusStr.toUpperCase()); } catch (Exception e) {}
+        }
 
         Page<AdminBarterResponse> mapped = barterRepo
                 .searchBarters(negotiationStatus, keyword, pageable)
@@ -97,6 +109,20 @@ public class AdminBarterService {
 
         barterRepo.save(barter);
 
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("CANCEL_BARTER")
+                    .targetType("BARTER")
+                    .targetId(barterId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
         log.warn("[ADMIN] Force-cancelled barter {} (userA: {}, userB: {}) — reason: {}",
                 barterId,
                 barter.getUserA() != null ? barter.getUserA().getEmail() : "?",
@@ -112,8 +138,13 @@ public class AdminBarterService {
 
     @Transactional(readOnly = true)
     public AdminApiResponse<List<AdminSwapRequestResponse>> listSwapRequests(
-            String status,
+            String statusStr,
             Pageable pageable) {
+
+        RequestStatus status = null;
+        if (statusStr != null && !statusStr.isBlank()) {
+            try { status = RequestStatus.valueOf(statusStr.toUpperCase()); } catch (Exception e) {}
+        }
 
         Page<AdminSwapRequestResponse> mapped = swapRepo
                 .searchRequests(status, pageable)
@@ -139,5 +170,52 @@ public class AdminBarterService {
         return barterRepo.findByIdWithDetails(barterId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Barter not found: id=" + barterId));
+    }
+
+    // ── Cryptographic Agreement Lookup ─────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public AdminApiResponse<AdminAgreementLookupResponse> lookupAgreementByHash(String hash) {
+        DigitalAgreement agreement = digitalAgreementRepository.findByDocumentHash(hash)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "No agreement found with the provided cryptographic key."));
+
+        Barter barter = agreement.getBarter();
+        AdminAgreementLookupResponse.AdminAgreementLookupResponseBuilder builder = AdminAgreementLookupResponse.builder()
+                .agreementId(agreement.getId())
+                .documentHash(agreement.getDocumentHash())
+                .agreementTerms(agreement.getAgreementTerms())
+                .type(agreement.getType() != null ? agreement.getType().name() : null)
+                .status(agreement.getStatus() != null ? agreement.getStatus().name() : null)
+                .userASigned(agreement.isUserASigned())
+                .userBSigned(agreement.isUserBSigned())
+                .uploadedIdByA(agreement.getUploadedIdByA())
+                .uploadedIdByB(agreement.getUploadedIdByB())
+                .createdAt(agreement.getCreatedAt())
+                .updatedAt(agreement.getUpdatedAt());
+
+        if (barter != null) {
+            builder.barterId(barter.getId());
+            if (barter.getUserA() != null) {
+                builder.userAId(barter.getUserA().getId())
+                       .userAName(barter.getUserA().getFullName())
+                       .userAEmail(barter.getUserA().getEmail());
+            }
+            if (barter.getUserB() != null) {
+                builder.userBId(barter.getUserB().getId())
+                       .userBName(barter.getUserB().getFullName())
+                       .userBEmail(barter.getUserB().getEmail());
+            }
+            if (barter.getPostA() != null) {
+                builder.postAId(barter.getPostA().getPostId())
+                       .postATitle(barter.getPostA().getTitle());
+            }
+            if (barter.getPostB() != null) {
+                builder.postBId(barter.getPostB().getPostId())
+                       .postBTitle(barter.getPostB().getTitle());
+            }
+        }
+
+        return AdminApiResponse.ok(builder.build());
     }
 }

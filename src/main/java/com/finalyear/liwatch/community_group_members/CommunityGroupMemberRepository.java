@@ -11,4 +11,5 @@ public interface CommunityGroupMemberRepository extends JpaRepository<CommunityG
     Optional<CommunityGroupMember> findByGroupIdAndUserId(Long groupId, Long userId);
     List<CommunityGroupMember> findByGroupId(Long groupId);
     boolean existsByGroupIdAndUserId(Long groupId, Long userId);
+    Long countByGroupId(Long groupId);
 }

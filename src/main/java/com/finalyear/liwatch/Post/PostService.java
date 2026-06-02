@@ -110,6 +110,9 @@ public class PostService {
             post=service;
         }
 
+        if (postItem.getIsVisible() != null) {
+            post.setIsVisible(postItem.getIsVisible());
+        }
 
         Post savedPost = postRepository.save(post);
 
@@ -217,19 +220,31 @@ public class PostService {
 
         //get the authenticated user
         User user= post.getUser();
-        if(post.getPostType()==PostType.ITEM)
+        if(post instanceof com.finalyear.liwatch.Item.Item)
         {
+           if(post.getPostType() != PostType.ITEM) {
+               post.setPostType(PostType.ITEM);
+               postRepository.save(post);
+           }
            PostResponseDto prd= PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);
-           ItemRequestDto itemResponseDto=PostUtilMethods.createItemResponseDtoFromItem((Item)post);
+           ItemRequestDto itemResponseDto=PostUtilMethods.createItemResponseDtoFromItem((com.finalyear.liwatch.Item.Item)post);
            prd.setItem(itemResponseDto);
             return prd;
         }
-        else
-        {   PostResponseDto prd= PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);
-            ServiceRequestDto serviceResponseDto=PostUtilMethods.createServiceResponseDtoFromService((Service) post);
+        else if(post instanceof com.finalyear.liwatch.service.Service)
+        {   
+           if(post.getPostType() != PostType.SERVICE) {
+               post.setPostType(PostType.SERVICE);
+               postRepository.save(post);
+           }
+           PostResponseDto prd= PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);
+            ServiceRequestDto serviceResponseDto=PostUtilMethods.createServiceResponseDtoFromService((com.finalyear.liwatch.service.Service) post);
             prd.setService(serviceResponseDto);
             return prd;
-
+        }
+        else
+        {
+            return PostUtilMethods.getPostResponseDtoFromPost(user,post,postMediaDtosList);
         }
 
 
@@ -283,7 +298,7 @@ public class PostService {
 
 
     // converting post to post response dto
-    private PostResponseDto convertToDto(Post post) {
+    public PostResponseDto convertToDto(Post post) {
 
         // Map PostMedia to PostMediaDto
         List<PostMediaDto> mediaDtos = post.getPostImages().stream()
@@ -292,11 +307,7 @@ public class PostService {
 
         // Map User to UserSummeryDto
         User user = post.getUser();
-        UserSummeryDto userDto = new UserSummeryDto(
-                user.getId(),
-                user.getFullName(),
-                user.getEmail()
-        );
+        UserSummeryDto userDto = UserSummeryDto.from(user);
 
         ItemRequestDto itemRequestDto= new ItemRequestDto();
         ServiceRequestDto serviceRequestDto=new ServiceRequestDto();
@@ -310,7 +321,6 @@ public class PostService {
                     post.getTitle(),
                     post.getDescription(),
                     post.getCategory(),
-                    post.getExchangeType(),
                     post.getStatus(),
                     post.getPostType(),
                     post.getCreatedAt(),
@@ -333,7 +343,6 @@ public class PostService {
                     post.getTitle(),
                     post.getDescription(),
                     post.getCategory(),
-                    post.getExchangeType(),
                     post.getStatus(),
                     post.getPostType(),
                     post.getCreatedAt(),
@@ -377,27 +386,21 @@ public class PostService {
         oldPost.setTitle(newPost.getTitle());
         oldPost.setDescription(newPost.getDescription());
         oldPost.setCategory(newPost.getCategory());
-        oldPost.setExchangeType(newPost.getExchangeType());
-        oldPost.setPostType(newPost.getPostType());
+        // Ensure postType is always in sync with the actual Java class to prevent ClassCastException
+        oldPost.setPostType(oldPost instanceof com.finalyear.liwatch.Item.Item ? PostType.ITEM : PostType.SERVICE);
         oldPost.setLocation(newPost.getLocation());
         oldPost.setLookingFor(newPost.getLookingFor());
 
 
         // update the post item or service based on post type of new post
-        if(newPost.getPostType()==PostType.ITEM)
-        {
-           Item item= PostUtilMethods.createItemFromRequest(newPost);
-
-        } else if (newPost.getPostType()==PostType.SERVICE) {
-
-            Service service = PostUtilMethods.createServiceFromRequest(newPost);
-
-        }
-        if (oldPost instanceof Item item && newPost.getItem() != null) {
-
-            item= PostUtilMethods.createItemFromRequest(newPost);
-        } else if (oldPost instanceof Service service && newPost.getService() != null) {
-            service=PostUtilMethods.createServiceFromRequest(newPost);
+        if (oldPost instanceof com.finalyear.liwatch.Item.Item oldItem && newPost.getItem() != null) {
+            oldItem.setCondition(newPost.getItem().getCondition());
+            oldItem.setEstimatedValue(newPost.getItem().getEstimatedValue());
+            oldItem.setPartialCashAllowed(newPost.getItem().getPartialCashAllowed());
+        } else if (oldPost instanceof com.finalyear.liwatch.service.Service oldService && newPost.getService() != null) {
+            oldService.setServiceDuration(newPost.getService().getServiceDuration());
+            oldService.setSkillLevel(newPost.getService().getSkillLevel());
+            oldService.setAvailability(newPost.getService().getAvailability());
         }
 
         Post updatedPost = postRepository.save(oldPost);

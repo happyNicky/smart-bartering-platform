@@ -52,23 +52,29 @@ public class DigitalAgreement {
     @Column(name = "id_card_image_of_swapper",nullable = true)
     private  String idCardImageOfSwapper;
 
-    @Column(name = "user_a_signed")
-    private boolean userASigned = false;
+    @Column(name = "uploaded_id_by_a", nullable = true, length = 512)
+    private String uploadedIdByA;
 
-    @Column(name = "user_b_signed")
-    private boolean userBSigned = false;
-
-    @Column(name = "user_a_signed_at")
-    private LocalDateTime userASignedAt;
-
-    @Column(name = "user_b_signed_at")
-    private LocalDateTime userBSignedAt;
-
-    @Column(name = "document_hash", length = 64)
-    private String documentHash;
-
-    @Column(name = "agreement_terms", columnDefinition = "TEXT")
-    private String agreementTerms;
+    @Column(name = "uploaded_id_by_b", nullable = true, length = 512)
+    private String uploadedIdByB;
+//
+//    @Column(name = "user_a_signed")
+//    private boolean userASigned = false;
+//
+//    @Column(name = "user_b_signed")
+//    private boolean userBSigned = false;
+//
+//    @Column(name = "user_a_signed_at")
+//    private LocalDateTime userASignedAt;
+//
+//    @Column(name = "user_b_signed_at")
+//    private LocalDateTime userBSignedAt;
+//
+//    @Column(name = "document_hash", length = 64)
+//    private String documentHash;
+//
+//    @Column(name = "agreement_terms", columnDefinition = "TEXT")
+//    private String agreementTerms;
 
 
 }

@@ -52,6 +52,23 @@ public class UserService {
         Optional<User> existing = userRepository.findByEmail(dto.getEmail());
         if (existing.isPresent()) {
             User u = existing.get();
+            // Check if this was an OAuth-only user (has placeholder password)
+            if (passwordEncoder.matches("oauth2user", u.getPassword())) {
+                // The user originally signed up via Google but now wants to set a password and sign up standard
+                u.setPassword(passwordEncoder.encode(dto.getPassword()));
+                if (dto.getFullName() != null && !dto.getFullName().isBlank()) {
+                    u.setFullName(dto.getFullName());
+                }
+                u.setEnabled(true);
+                u.setVerified(true);
+                if (u.getUserProfile() == null) {
+                    UserProfile profile = new UserProfile();
+                    profile.setUser(u);
+                    profile.setLocation("");
+                    u.setUserProfile(profile);
+                }
+                return userRepository.save(u);
+            }
             if (u.isEnabled()) {
                 throw new IllegalArgumentException("Email already in use: " + dto.getEmail());
             }
@@ -78,8 +95,14 @@ public class UserService {
 
     public ResponseEntity<?> verify(LoginUserDto dto) {
         Optional<User> existing = userRepository.findByEmail(dto.getEmail());
-        if (existing.isPresent() && !existing.get().isEnabled()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Please verify your email first");
+        if (existing.isPresent()) {
+            User user = existing.get();
+            if (user.getStatus() == com.finalyear.liwatch.userManagement.utils.enums.Status.SUSPENDED) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your account has been suspended.");
+            }
+            if (!user.isEnabled()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Please verify your email first");
+            }
         }
         try {
             authenticationManager.authenticate(
@@ -149,5 +172,26 @@ public class UserService {
         resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
         tokenRepository.save(resetToken);
         emailSendingService.sendPasswordResetEmail(user.getEmail(), token);
+    }
+
+    @Transactional
+    public void changePassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        boolean isOauthOnly = passwordEncoder.matches("oauth2user", user.getPassword());
+        if (!isOauthOnly) {
+            if (currentPassword == null || currentPassword.isBlank() ||
+                    !passwordEncoder.matches(currentPassword, user.getPassword())) {
+                throw new IllegalArgumentException("Incorrect current password");
+            }
+        }
+
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters long");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }

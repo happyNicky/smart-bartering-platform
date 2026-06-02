@@ -12,10 +12,14 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("negotiation")
+@RequestMapping("/api/negotiation")
 public class NegotiationController {
     @Autowired
     private NegotiationService negotiationService;
+
+    @Autowired
+    private com.finalyear.liwatch.digitalagreement.agreement_managment.DigitalAgreementRepository digitalAgreementRepository;
+
     @PostMapping("/get-all-nego/{id}")
     public ResponseEntity<java.util.List<com.finalyear.liwatch.negotiation.NegotiationResponseDto>> getAllChat(@PathVariable long id){
         java.util.List<Negotiation> negotiations = negotiationService.getNegotiationByUserId(id);
@@ -46,27 +50,61 @@ public class NegotiationController {
     private com.finalyear.liwatch.negotiation.NegotiationResponseDto toDto(Negotiation nego) {
             com.finalyear.liwatch.barter.dto.BarterResponseDto barterDto = null;
             if (nego.getBarter() != null) {
-                barterDto = new com.finalyear.liwatch.barter.dto.BarterResponseDto(
-                        nego.getBarter().getId(),
-                        nego.getBarter().getCreatedAt(),
-                        nego.getBarter().getSwapRequest() != null ? nego.getBarter().getSwapRequest().getId() : null,
-                        nego.getBarter().getUserA() != null ? nego.getBarter().getUserA().getId() : null,
-                        nego.getBarter().getUserB() != null ? nego.getBarter().getUserB().getId() : null,
-                        nego.getBarter().getPostA() != null ? nego.getBarter().getPostA().getPostId() : null,
-                        nego.getBarter().getPostB() != null ? nego.getBarter().getPostB().getPostId() : null
-                );
+                com.finalyear.liwatch.barter.Barter barter = nego.getBarter();
+                com.finalyear.liwatch.userManagement.DTO.UserSummeryDto userADto = com.finalyear.liwatch.userManagement.DTO.UserSummeryDto.from(barter.getUserA());
+                com.finalyear.liwatch.userManagement.DTO.UserSummeryDto userBDto = com.finalyear.liwatch.userManagement.DTO.UserSummeryDto.from(barter.getUserB());
+                com.finalyear.liwatch.Post.PostResponseDto postADto = barter.getPostA() != null ?
+                        com.finalyear.liwatch.Post.utils.PostUtilMethods.getPostResponseDtoFromPost(barter.getUserA(), barter.getPostA(), java.util.Collections.emptyList()) : null;
+                com.finalyear.liwatch.Post.PostResponseDto postBDto = barter.getPostB() != null ?
+                        com.finalyear.liwatch.Post.utils.PostUtilMethods.getPostResponseDtoFromPost(barter.getUserB(), barter.getPostB(), java.util.Collections.emptyList()) : null;
+
+                barterDto = com.finalyear.liwatch.barter.dto.BarterResponseDto.builder()
+                        .id(barter.getId())
+                        .createdAt(barter.getCreatedAt())
+                        .swapRequestId(barter.getSwapRequest() != null ? barter.getSwapRequest().getId() : null)
+                        .userA(userADto)
+                        .userB(userBDto)
+                        .postA(postADto)
+                        .postB(postBDto)
+                        .build();
             }
 
             java.util.List<com.finalyear.liwatch.chat.ChatDto> chatDtos = null;
             if (nego.getMessages() != null) {
-                chatDtos = nego.getMessages().stream().map(chat -> new com.finalyear.liwatch.chat.ChatDto(
-                        chat.getId(),
-                        chat.getNegotiation() != null ? chat.getNegotiation().getId() : null,
-                        chat.getSender() != null ? chat.getSender().getId() : null,
-                        chat.getMessageText(),
-                        chat.isEncrypted(),
-                        chat.getSentAt()
-                )).collect(java.util.stream.Collectors.toList());
+                chatDtos = nego.getMessages().stream().map(chat -> com.finalyear.liwatch.chat.ChatDto.builder()
+                        .id(chat.getId())
+                        .negotiationId(chat.getNegotiation() != null ? chat.getNegotiation().getId() : null)
+                        .senderId(chat.getSender() != null ? chat.getSender().getId() : null)
+                        .messageText(chat.getMessageText())
+                        .isEncrypted(chat.isEncrypted())
+                        .isRead(chat.isRead())
+                        .fileUrl(chat.getFileUrl())
+                        .fileName(chat.getFileName())
+                        .fileType(chat.getFileType())
+                        .sentAt(chat.getSentAt())
+                        .build()
+                ).collect(java.util.stream.Collectors.toList());
+            }
+
+            com.finalyear.liwatch.digitalagreement.dto.DigitalAgreementDto agreementDto = null;
+            if (nego.getBarter() != null) {
+                java.util.Optional<com.finalyear.liwatch.digitalagreement.DigitalAgreement> agreementOpt =
+                        digitalAgreementRepository.findByBarterId(nego.getBarter().getId());
+                if (agreementOpt.isPresent()) {
+                    com.finalyear.liwatch.digitalagreement.DigitalAgreement agreement = agreementOpt.get();
+                    agreementDto = new com.finalyear.liwatch.digitalagreement.dto.DigitalAgreementDto(
+                            agreement.getBarter().getId(),
+                            agreement.getType(),
+                            agreement.getStatus() != null ? agreement.getStatus().name() : null,
+                            agreement.isUserASigned(),
+                            agreement.isUserBSigned(),
+                            agreement.getDocumentHash(),
+                            agreement.getAgreementTerms(),
+                            agreement.getUploadedIdByA(),
+                            agreement.getUploadedIdByB(),
+                            agreement.getId()
+                    );
+                }
             }
 
             String suggestion = nego.getFairValueSuggestion();
@@ -85,11 +123,26 @@ public class NegotiationController {
                     .suggestionAdvice(advice)
                     .barter(barterDto)
                     .messages(chatDtos)
+                    .agreement(agreementDto)
                     .build();
     }
     @GetMapping("/chat/fetch/{id}")
-    public void getChatOfNegotiation(@PathVariable("id")Long id){
-        negotiationService.getChatsOfNegotiation(id);
+    public ResponseEntity<java.util.List<com.finalyear.liwatch.chat.ChatDto>> getChatOfNegotiation(@PathVariable("id")Long id){
+        java.util.List<Chat> chats = negotiationService.getChatsOfNegotiation(id);
+        java.util.List<com.finalyear.liwatch.chat.ChatDto> chatDtos = chats.stream().map(chat -> com.finalyear.liwatch.chat.ChatDto.builder()
+                .id(chat.getId())
+                .negotiationId(chat.getNegotiation() != null ? chat.getNegotiation().getId() : null)
+                .senderId(chat.getSender() != null ? chat.getSender().getId() : null)
+                .messageText(chat.getMessageText())
+                .isEncrypted(chat.isEncrypted())
+                .isRead(chat.isRead())
+                .fileUrl(chat.getFileUrl())
+                .fileName(chat.getFileName())
+                .fileType(chat.getFileType())
+                .sentAt(chat.getSentAt())
+                .build()
+        ).collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(chatDtos);
     }
 
     private String parseLine(String suggestion, int idx) {

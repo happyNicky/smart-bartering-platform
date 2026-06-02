@@ -24,14 +24,22 @@ public class FairValueSuggestionService {
     @Value("${liwatch.gemini.api-key:}")
     private String geminiApiKey;
 
-    @Value("${liwatch.gemini.model:gemini-1.5-flash}")
+    @Value("${liwatch.gemini.model:gemini-2.5-flash}")
     private String geminiModel;
 
+    private boolean isFallbackSuggestion(String suggestion) {
+        if (suggestion == null) return true;
+        return suggestion.contains("temporarily unavailable") || suggestion.contains("not configured yet");
+    }
+
     public String ensureSuggestion(Negotiation negotiation) {
-        if (negotiation.getFairValueSuggestion() != null && !negotiation.getFairValueSuggestion().isBlank()) {
+        if (negotiation.getFairValueSuggestion() != null 
+                && !negotiation.getFairValueSuggestion().isBlank() 
+                && negotiation.getFairnessScore() != null
+                && !isFallbackSuggestion(negotiation.getFairValueSuggestion())) {
             return negotiation.getFairValueSuggestion();
         }
-        String suggestion = callGeminiForSuggestion(negotiation.getBarter());
+        String suggestion = callGeminiForSuggestion(negotiation);
         negotiation.setFairValueSuggestion(suggestion);
         negotiation.setSuggestionUpdatedAt(LocalDateTime.now());
         return suggestion;
@@ -41,7 +49,7 @@ public class FairValueSuggestionService {
         if (isCooldownActive(negotiation)) {
             throw new IllegalStateException("Please wait before refreshing again");
         }
-        String suggestion = callGeminiForSuggestion(negotiation.getBarter());
+        String suggestion = callGeminiForSuggestion(negotiation);
         negotiation.setFairValueSuggestion(suggestion);
         negotiation.setSuggestionUpdatedAt(LocalDateTime.now());
         return suggestion;
@@ -55,8 +63,10 @@ public class FairValueSuggestionService {
         return updatedAt.plus(REFRESH_COOLDOWN).isAfter(LocalDateTime.now());
     }
 
-    private String callGeminiForSuggestion(Barter barter) {
+    private String callGeminiForSuggestion(Negotiation negotiation) {
+        Barter barter = negotiation.getBarter();
         if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            negotiation.setFairnessScore(70.0);
             return "Slightly uneven\nGemini API key is not configured yet; users should compare item condition, demand, and local resale value before confirming.";
         }
 
@@ -68,9 +78,10 @@ public class FairValueSuggestionService {
         String prompt = "You are a fair value advisor for a barter platform in Ethiopia.\n"
                 + "User 1 is offering: " + offeredItemName + " - " + offeredItemDetails + ".\n"
                 + "User 2 is offering: " + requestedItemName + " - " + requestedItemDetails + ".\n"
-                + "Is this a fair trade? Reply in exactly 2 lines:\n"
+                + "Is this a fair trade? Reply in exactly 3 lines:\n"
                 + "Line 1: 'Fair trade', 'Slightly uneven', or 'Uneven trade'.\n"
-                + "Line 2: One advice sentence for both users, max 50 words.";
+                + "Line 2: A numerical fairness score from 0 to 100 representing the fairness of the trade (just the integer number, e.g. '85').\n"
+                ;
 
         try {
             String url = "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -100,6 +111,8 @@ public class FairValueSuggestionService {
                     .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                System.err.println("Gemini request failed. Status: " + response.statusCode() + ", Body: " + response.body());
+                negotiation.setFairnessScore(70.0);
                 return "Slightly uneven\nAI advisor is temporarily unavailable; compare both items' condition and market demand before finalizing.";
             }
 
@@ -108,27 +121,85 @@ public class FairValueSuggestionService {
                     .path("content").path("parts").path(0).path("text");
 
             String output = textNode.isMissingNode() ? "" : textNode.asText("").trim();
-            return normalizeTwoLineSuggestion(output);
+            return normalizeThreeLineSuggestion(negotiation, output);
         } catch (Exception e) {
+            System.err.println("Exception calling Gemini: ");
+            e.printStackTrace();
+            negotiation.setFairnessScore(70.0);
             return "Slightly uneven\nAI advisor is temporarily unavailable; users should verify condition, accessories, and local value before confirming.";
         }
     }
 
-    private String normalizeTwoLineSuggestion(String raw) {
+    private String normalizeThreeLineSuggestion(Negotiation negotiation, String raw) {
         if (raw == null || raw.isBlank()) {
+            negotiation.setFairnessScore(70.0);
             return "Slightly uneven\nReview each item's condition and local market value before accepting this trade.";
         }
-        String[] lines = raw.replace("\r", "").split("\n");
-        String line1 = lines.length > 0 ? lines[0].trim() : "";
-        String line2 = lines.length > 1 ? lines[1].trim() : "";
+        
+        java.util.List<String> cleanLines = new java.util.ArrayList<>();
+        for (String line : raw.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("`")) {
+                continue;
+            }
+            trimmed = trimmed.replaceAll("^(?i)(Line\\s*\\d+\\s*:\\s*|\\d+\\.\\s*|Status\\s*:\\s*|Score\\s*:\\s*|Advice\\s*:\\s*)", "");
+            trimmed = trimmed.trim();
+            if (!trimmed.isEmpty()) {
+                cleanLines.add(trimmed);
+            }
+        }
+
+        String line1 = cleanLines.size() > 0 ? cleanLines.get(0) : "";
+        String line2 = cleanLines.size() > 1 ? cleanLines.get(1) : "";
+        
+        StringBuilder line3Builder = new StringBuilder();
+        for (int i = 2; i < cleanLines.size(); i++) {
+            if (line3Builder.length() > 0) {
+                line3Builder.append(" ");
+            }
+            line3Builder.append(cleanLines.get(i));
+        }
+        String line3 = line3Builder.toString().trim();
 
         if (!line1.equals("Fair trade") && !line1.equals("Slightly uneven") && !line1.equals("Uneven trade")) {
-            line1 = "Slightly uneven";
+            String lower = line1.toLowerCase();
+            if (lower.contains("fair")) {
+                line1 = "Fair trade";
+            } else if (lower.contains("uneven")) {
+                if (lower.contains("slightly")) {
+                    line1 = "Slightly uneven";
+                } else {
+                    line1 = "Uneven trade";
+                }
+            } else {
+                line1 = "Slightly uneven";
+            }
         }
-        if (line2.isBlank()) {
-            line2 = "Compare condition, demand, and replacement cost for both items before you finalize.";
+
+        double score = 70.0;
+        try {
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\d+");
+            java.util.regex.Matcher m = p.matcher(line2);
+            if (m.find()) {
+                score = Double.parseDouble(m.group());
+            } else {
+                if ("Fair trade".equals(line1)) score = 90.0;
+                else if ("Uneven trade".equals(line1)) score = 40.0;
+                else score = 70.0;
+            }
+            if (score < 0) score = 0;
+            if (score > 100) score = 100;
+        } catch (Exception e) {
+            if ("Fair trade".equals(line1)) score = 90.0;
+            else if ("Uneven trade".equals(line1)) score = 40.0;
+            else score = 70.0;
         }
-        return line1 + "\n" + line2;
+        negotiation.setFairnessScore(score);
+
+        if (line3.isBlank()) {
+            line3 = "Compare condition, demand, and replacement cost for both items before you finalize.";
+        }
+        return line1 + "\n" + line3;
     }
 
     private String safe(String input) {

@@ -1,6 +1,8 @@
 package com.finalyear.liwatch.admin;
 
 import com.finalyear.liwatch.Post.Post;
+import com.finalyear.liwatch.Post.enums.Status;
+import com.finalyear.liwatch.Post.enums.PostType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,8 +34,8 @@ public interface AdminPostRepository extends JpaRepository<Post, Long> {
             """)
     Page<Post> searchPosts(
             @Param("keyword")  String keyword,
-            @Param("status")   String status,
-            @Param("postType") String postType,
+            @Param("status")   Status status,
+            @Param("postType") PostType postType,
             Pageable pageable
     );
 
@@ -59,21 +61,23 @@ public interface AdminPostRepository extends JpaRepository<Post, Long> {
             """)
     Optional<Post> findByIdWithDetails(@Param("postId") Long postId);
 
-    // ── Counts for reports linked to a post ────────────────────────────────────
-    // UserReport is user-to-user, so we count swap requests on this post
-    // as a proxy for activity; real "post reports" can be added later.
-
     @Query("SELECT COUNT(r) FROM DirectSwapRequest r WHERE r.offeredPost.postId   = :postId OR r.requestedPost.postId = :postId")
     int countSwapRequestsForPost(@Param("postId") Long postId);
 
+    @Query("SELECT COUNT(b) FROM Barter b WHERE b.postA.postId = :postId OR b.postB.postId = :postId")
+    int countBartersForPost(@Param("postId") Long postId);
+
+    @Query("SELECT COUNT(r) FROM UserReport r WHERE r.reportedPost.postId = :postId")
+    int countReportsByPostId(@Param("postId") Long postId);
+
     // ── Stats ─────────────────────────────────────────────────────────────────
 
-    long countByStatus(com.finalyear.liwatch.Post.enums.Status status);
+    long countByStatus(Status status);
 
-    @Query("SELECT COUNT(p) FROM Post p WHERE TYPE(p) = com.finalyear.liwatch.Post.Item")
+    @Query("SELECT COUNT(p) FROM Post p WHERE TYPE(p) = com.finalyear.liwatch.Item.Item")
     long countItems();
 
-    @Query("SELECT COUNT(p) FROM Post p WHERE TYPE(p) = com.finalyear.liwatch.Post.Service")
+    @Query("SELECT COUNT(p) FROM Post p WHERE TYPE(p) = com.finalyear.liwatch.service.Service")
     long countServices();
 
     long countByCreatedAtAfter(LocalDateTime since);

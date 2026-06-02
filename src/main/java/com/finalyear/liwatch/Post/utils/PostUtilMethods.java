@@ -20,14 +20,13 @@ public class PostUtilMethods {
 
     public static PostResponseDto getPostResponseDtoFromPost(User user, Post post, List<PostMediaDto> postMediaDtosList)
     {
-        UserSummeryDto usd=new UserSummeryDto(user.getId(),user.getFullName(), user.getEmail());
+        UserSummeryDto usd = UserSummeryDto.from(user);
         PostResponseDto prd= new PostResponseDto();
         prd.setPostId(post.getPostId());
         prd.setTitle(post.getTitle());
         prd.setDescription(post.getDescription());
         prd.setStatus(post.getStatus());
         prd.setPostType(post.getPostType());
-        prd.setExchangeType(post.getExchangeType());
         prd.setCategory(post.getCategory());
         prd.setPostImages(postMediaDtosList);
         prd.setUser(usd);
@@ -49,7 +48,6 @@ public class PostUtilMethods {
         item.setTitle(postRequestDto.getTitle());
         item.setDescription(postRequestDto.getDescription());
         item.setCategory(postRequestDto.getCategory());
-        item.setExchangeType(postRequestDto.getExchangeType());
         item.setPostType(postRequestDto.getPostType());
         item.setCondition(postRequestDto.getItem().getCondition());
         item.setLocation(postRequestDto.getLocation());
@@ -75,7 +73,6 @@ public class PostUtilMethods {
         service.setTitle(postRequestDto.getTitle());
         service.setDescription(postRequestDto.getDescription());
         service.setCategory(postRequestDto.getCategory());
-        service.setExchangeType(postRequestDto.getExchangeType());
         service.setPostType(postRequestDto.getPostType());
         service.setStatus(Status.ACTIVE);
         service.setLocation(postRequestDto.getLocation());

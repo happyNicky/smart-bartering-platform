@@ -1,8 +1,10 @@
 package com.finalyear.liwatch.admin;
 
+import com.finalyear.liwatch.Notification.NotificationService;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.utils.enums.Role;
 import com.finalyear.liwatch.userManagement.utils.enums.Status;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -12,12 +14,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminUserService {
 
     private final AdminUserRepository userRepo;
+    private final AdminActionLogRepository logRepo;
+    private final UserUtilService userUtil;
+    private final NotificationService notificationService;
 
     // ── List / search ──────────────────────────────────────────────────────────
 
@@ -28,9 +35,19 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public AdminApiResponse<java.util.List<AdminUserResponse>> listUsers(
             String keyword,
-            String status,
-            String role,
+            String statusStr,
+            String roleStr,
             Pageable pageable) {
+
+        Status status = null;
+        if (statusStr != null && !statusStr.isBlank()) {
+            try { status = Status.valueOf(statusStr.toUpperCase()); } catch(Exception e){}
+        }
+
+        Role role = null;
+        if (roleStr != null && !roleStr.isBlank()) {
+            try { role = Role.valueOf(roleStr.toUpperCase()); } catch(Exception e){}
+        }
 
         Page<User> page = userRepo.searchUsers(keyword, status, role, pageable);
 
@@ -70,6 +87,10 @@ public class AdminUserService {
                     "User is already suspended.");
         }
         if (user.getRole() == Role.ADMIN) {
+            if (user.getId().equals(userUtil.getCurrentlyAuthenticatedUser().getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "You cannot suspend your own admin account.");
+            }
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Cannot suspend another admin account.");
         }
@@ -77,6 +98,32 @@ public class AdminUserService {
         user.setStatus(Status.SUSPENDED);
         user.setEnabled(false);
         userRepo.save(user);
+
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("SUSPEND_USER")
+                    .targetType("USER")
+                    .targetId(userId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
+        try {
+            notificationService.createNotification(
+                    userId,
+                    user.getEmail(),
+                    "Account Suspended",
+                    "Your account has been suspended by the administrator. Reason: " + req.getReason(),
+                    "ACCOUNT_SUSPENDED"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send suspension notification to user {}: {}", userId, e.getMessage());
+        }
 
         log.info("[ADMIN] Suspended user {} — reason: {}", userId, req.getReason());
         return AdminApiResponse.ok(AdminUserResponse.from(user),
@@ -98,6 +145,32 @@ public class AdminUserService {
         user.setEnabled(true);
         userRepo.save(user);
 
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("ACTIVATE_USER")
+                    .targetType("USER")
+                    .targetId(userId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
+        try {
+            notificationService.createNotification(
+                    userId,
+                    user.getEmail(),
+                    "Account Activated",
+                    "Your account has been activated/unsuspended by the administrator.",
+                    "ACCOUNT_ACTIVATED"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send activation notification to user {}: {}", userId, e.getMessage());
+        }
+
         log.info("[ADMIN] Activated user {} — reason: {}", userId, req.getReason());
         return AdminApiResponse.ok(AdminUserResponse.from(user),
                 "User activated successfully.");
@@ -117,6 +190,32 @@ public class AdminUserService {
         user.setRole(Role.ADMIN);
         userRepo.save(user);
 
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("PROMOTE_USER")
+                    .targetType("USER")
+                    .targetId(userId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
+        try {
+            notificationService.createNotification(
+                    userId,
+                    user.getEmail(),
+                    "Role Updated",
+                    "You have been promoted to administrator.",
+                    "ROLE_UPDATED"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send promotion notification to user {}: {}", userId, e.getMessage());
+        }
+
         log.info("[ADMIN] Promoted user {} to ADMIN — reason: {}", userId, req.getReason());
         return AdminApiResponse.ok(AdminUserResponse.from(user),
                 "User promoted to admin.");
@@ -133,30 +232,46 @@ public class AdminUserService {
                     "User already has the USER role.");
         }
 
+        User currentAdmin = userUtil.getCurrentlyAuthenticatedUser();
+        if (currentAdmin.getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You cannot demote your own admin account.");
+        }
+
         user.setRole(Role.USER);
         userRepo.save(user);
+
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("DEMOTE_USER")
+                    .targetType("USER")
+                    .targetId(userId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
+        try {
+            notificationService.createNotification(
+                    userId,
+                    user.getEmail(),
+                    "Role Updated",
+                    "Your role has been updated to regular user.",
+                    "ROLE_UPDATED"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send demotion notification to user {}: {}", userId, e.getMessage());
+        }
 
         log.info("[ADMIN] Demoted user {} to USER — reason: {}", userId, req.getReason());
         return AdminApiResponse.ok(AdminUserResponse.from(user),
                 "User demoted to regular user.");
     }
 
-    // ── Force-verify a user ───────────────────────────────────────────────────
-
-    @Transactional
-    public AdminApiResponse<AdminUserResponse> forceVerifyUser(Long userId) {
-        User user = findOrThrow(userId);
-
-        user.setVerified(true);
-        user.setEnabled(true);
-        user.setVerificationToken(null);
-        user.setTokenExpiry(null);
-        userRepo.save(user);
-
-        log.info("[ADMIN] Force-verified user {}", userId);
-        return AdminApiResponse.ok(AdminUserResponse.from(user),
-                "User verified and enabled.");
-    }
 
     // ── Delete user ───────────────────────────────────────────────────────────
 
@@ -165,11 +280,29 @@ public class AdminUserService {
         User user = findOrThrow(userId);
 
         if (user.getRole() == Role.ADMIN) {
+            if (user.getId().equals(userUtil.getCurrentlyAuthenticatedUser().getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "You cannot delete your own admin account.");
+            }
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Cannot delete an admin account.");
         }
 
         userRepo.delete(user);
+
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("DELETE_USER")
+                    .targetType("USER")
+                    .targetId(userId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
 
         log.warn("[ADMIN] DELETED user {} ({}) — reason: {}",
                 userId, user.getEmail(), req.getReason());

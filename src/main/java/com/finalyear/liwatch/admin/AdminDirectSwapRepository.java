@@ -28,7 +28,7 @@ public interface AdminDirectSwapRepository extends JpaRepository<DirectSwapReque
             ORDER BY r.createdAt DESC
             """)
     Page<DirectSwapRequest> searchRequests(
-            @Param("status") String status,
+            @Param("status") RequestStatus status,
             Pageable pageable
     );
 

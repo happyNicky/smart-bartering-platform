@@ -100,16 +100,6 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.demoteToUser(userId, req));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PATCH /api/admin/users/{userId}/verify
-    // Force-verify a user without them going through the email flow
-    // ─────────────────────────────────────────────────────────────────────────
-    @PatchMapping("/{userId}/verify")
-    public ResponseEntity<AdminApiResponse<AdminUserResponse>> forceVerify(
-            @PathVariable Long userId
-    ) {
-        return ResponseEntity.ok(userService.forceVerifyUser(userId));
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // DELETE /api/admin/users/{userId}

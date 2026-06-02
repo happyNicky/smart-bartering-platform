@@ -9,6 +9,8 @@ import com.finalyear.liwatch.userprofile.UserProfile;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,7 +49,8 @@ public class User {
 
     private LocalDateTime tokenExpiry;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProfile userProfile;

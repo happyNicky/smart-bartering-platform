@@ -1,12 +1,13 @@
 package com.finalyear.liwatch.wishlist;
 
-
-
+import com.finalyear.liwatch.Post.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "wishlists")
+@Table(name = "wishlists", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "post_id"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,9 +22,7 @@ public class Wishlist {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "desired_item", nullable = false, length = 150)
-    private String desiredItem;
-
-    @Column(name = "alert_enabled")
-    private Boolean alertEnabled = true;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 }

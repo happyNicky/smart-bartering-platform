@@ -17,5 +17,9 @@ public class ChatDto {
     private Long senderId;
     private String messageText;
     private boolean isEncrypted;
+    private boolean isRead;
+    private String fileUrl;
+    private String fileName;
+    private String fileType;
     private LocalDateTime sentAt;
 }

@@ -31,5 +31,14 @@ public class Chat {
 
     private boolean isEncrypted;
 
+    @Builder.Default
+    private boolean isRead = false;
+
+    private String fileUrl;
+
+    private String fileName;
+
+    private String fileType;
+
     private LocalDateTime sentAt;
 }

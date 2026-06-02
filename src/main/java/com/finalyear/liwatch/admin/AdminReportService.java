@@ -6,6 +6,7 @@ import com.finalyear.liwatch.report.enums.ReportStatus;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.utils.enums.Role;
 import com.finalyear.liwatch.userManagement.utils.enums.Status;
+import com.finalyear.liwatch.userManagement.utils.classes.UserUtilService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,14 +26,22 @@ public class AdminReportService {
 
     private final AdminReportRepository reportRepo;
     private final AdminUserRepository   userRepo;
+    private final com.finalyear.liwatch.Notification.NotificationService notificationService;
+    private final AdminActionLogRepository logRepo;
+    private final UserUtilService userUtil;
 
     // ── List / search reports ─────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public AdminApiResponse<List<AdminReportResponse>> listReports(
-            String status,
+            String statusStr,
             String keyword,
             Pageable pageable) {
+
+        ReportStatus status = null;
+        if (statusStr != null && !statusStr.isBlank()) {
+            try { status = ReportStatus.valueOf(statusStr.toUpperCase()); } catch(Exception e){}
+        }
 
         Page<AdminReportResponse> mapped = reportRepo
                 .searchReports(status, keyword, pageable)
@@ -96,37 +105,90 @@ public class AdminReportService {
         report.setValidatedAt(LocalDateTime.now());
         reportRepo.save(report);
 
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("VALIDATE_REPORT")
+                    .targetType("REPORT")
+                    .targetId(reportId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
         // act on the reported user based on the chosen action
         User reportedUser = report.getReportedUser();
-        switch (req.getUserAction()) {
+        if (reportedUser != null) {
+            switch (req.getUserAction()) {
 
-            case SUSPEND -> {
-                if (reportedUser.getRole() == Role.ADMIN) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                            "Cannot suspend an admin account via report validation.");
+                case SUSPEND -> {
+                    if (reportedUser.getRole() == Role.ADMIN) {
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                "Cannot suspend an admin account via report validation.");
+                    }
+                    reportedUser.setStatus(Status.SUSPENDED);
+                    reportedUser.setEnabled(false);
+                    userRepo.save(reportedUser);
+                    log.warn("[ADMIN] Validated report {} → SUSPENDED user {} — reason: {}",
+                            reportId, reportedUser.getId(), req.getReason());
                 }
-                reportedUser.setStatus(Status.SUSPENDED);
-                reportedUser.setEnabled(false);
-                userRepo.save(reportedUser);
-                log.warn("[ADMIN] Validated report {} → SUSPENDED user {} — reason: {}",
-                        reportId, reportedUser.getId(), req.getReason());
-            }
 
-            case WARN -> {
-                // placeholder: in a full system, push a warning notification to the user
-                log.warn("[ADMIN] Validated report {} → WARNED user {} — reason: {}",
-                        reportId, reportedUser.getId(), req.getReason());
-            }
+                case WARN -> {
+                    log.warn("[ADMIN] Validated report {} → WARNED user {} — reason: {}",
+                            reportId, reportedUser.getId(), req.getReason());
+                }
 
-            default -> {
-                log.info("[ADMIN] Validated report {} → no user action — reason: {}",
-                        reportId, req.getReason());
+                default -> {
+                    log.info("[ADMIN] Validated report {} → no user action — reason: {}",
+                            reportId, req.getReason());
+                }
+            }
+        } else {
+            log.info("[ADMIN] Validated report {} → no reported user associated — reason: {}",
+                    reportId, req.getReason());
+        }
+
+        // Notify the reporter
+        if (report.getReporterUser() != null) {
+            try {
+                notificationService.createNotification(
+                        report.getReporterUser().getId(),
+                        report.getReporterUser().getEmail(),
+                        "Report Resolved",
+                        "Your report with ID #" + report.getReportId() + " has been reviewed and resolved. Action has been taken where appropriate.",
+                        "REPORT_RESOLUTION"
+                );
+            } catch (Exception e) {
+                log.error("Failed to send notification to reporter: {}", e.getMessage());
+            }
+        }
+
+        // Notify the reported user
+        if (reportedUser != null) {
+            try {
+                String actionMsg = switch (req.getUserAction()) {
+                    case SUSPEND -> "Your account has been suspended due to violations of our platform terms reported in case #" + report.getReportId() + ". Reason: " + req.getReason();
+                    case WARN -> "Your account has received a warning due to a report (case #" + report.getReportId() + "). Reason: " + req.getReason();
+                    default -> "A report against your account (case #" + report.getReportId() + ") was reviewed. No action was taken.";
+                };
+                notificationService.createNotification(
+                        reportedUser.getId(),
+                        reportedUser.getEmail(),
+                        "Account Policy Update",
+                        actionMsg,
+                        "ACCOUNT_WARNING"
+                );
+            } catch (Exception e) {
+                log.error("Failed to send notification to reported user: {}", e.getMessage());
             }
         }
 
         return AdminApiResponse.ok(
                 AdminReportResponse.from(report),
-                buildValidationMessage(req.getUserAction(), reportedUser.getFullName()));
+                buildValidationMessage(req.getUserAction(), reportedUser != null ? reportedUser.getFullName() : "User"));
     }
 
     // ── Dismiss report (PENDING → DISMISSED, no action on user) ──────────────
@@ -142,7 +204,37 @@ public class AdminReportService {
         report.setValidatedAt(LocalDateTime.now());
         reportRepo.save(report);
 
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("DISMISS_REPORT")
+                    .targetType("REPORT")
+                    .targetId(reportId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
+
         log.info("[ADMIN] Dismissed report {} — reason: {}", reportId, req.getReason());
+
+        // Notify the reporter
+        if (report.getReporterUser() != null) {
+            try {
+                notificationService.createNotification(
+                        report.getReporterUser().getId(),
+                        report.getReporterUser().getEmail(),
+                        "Report Dismissed",
+                        "Your report with ID #" + report.getReportId() + " has been reviewed and dismissed. No violations were found.",
+                        "REPORT_RESOLUTION"
+                );
+            } catch (Exception e) {
+                log.error("Failed to send notification to reporter: {}", e.getMessage());
+            }
+        }
+
         return AdminApiResponse.ok(
                 AdminReportResponse.from(report),
                 "Report dismissed.");
@@ -164,6 +256,20 @@ public class AdminReportService {
         report.setStatus(ReportStatus.PENDING);
         report.setValidatedAt(null);
         reportRepo.save(report);
+
+        try {
+            String adminEmail = userUtil.getCurrentlyAuthenticatedUser().getEmail();
+            logRepo.save(AdminActionLog.builder()
+                    .adminEmail(adminEmail)
+                    .actionType("REOPEN_REPORT")
+                    .targetType("REPORT")
+                    .targetId(reportId)
+                    .reason(req.getReason())
+                    .actionTime(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save admin action log: {}", e.getMessage());
+        }
 
         log.info("[ADMIN] Re-opened report {} — reason: {}", reportId, req.getReason());
         return AdminApiResponse.ok(

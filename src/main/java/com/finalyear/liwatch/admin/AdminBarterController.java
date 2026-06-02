@@ -119,4 +119,14 @@ public class AdminBarterController {
     ) {
         return ResponseEntity.ok(barterService.getSwapRequestDetail(requestId));
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/admin/barters/agreement-by-hash/{hash}
+    // ─────────────────────────────────────────────────────────────────────────
+    @GetMapping("/api/admin/barters/agreement-by-hash/{hash}")
+    public ResponseEntity<AdminApiResponse<AdminAgreementLookupResponse>> lookupAgreementByHash(
+            @PathVariable String hash
+    ) {
+        return ResponseEntity.ok(barterService.lookupAgreementByHash(hash));
+    }
 }

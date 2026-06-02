@@ -1,7 +1,6 @@
 package com.finalyear.liwatch.Post;
 
 import com.finalyear.liwatch.Item.ItemRequestDto;
-import com.finalyear.liwatch.Post.enums.ExchangeType;
 import com.finalyear.liwatch.Post.enums.PostType;
 import com.finalyear.liwatch.Post.enums.Status;
 import com.finalyear.liwatch.media.postMedia.PostMedia;
@@ -24,11 +23,11 @@ public class PostRequestDto {
     private String location;
     private String lookingFor;
     private PostType postType=PostType.ITEM;
-    private ExchangeType exchangeType;
     private List<PostMediaDto> postImages;
 
     private ItemRequestDto item;
     private ServiceRequestDto service;
     private Long groupId;
     private Boolean isGroupOnly;
+    private Boolean isVisible = true;
 }

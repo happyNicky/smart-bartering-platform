@@ -23,4 +23,7 @@ public class DigitalAgreementDto {
         private Boolean userBSigned;
         private String documentHash;
         private String agreementTerms;
+        private String uploadedIdByA;
+        private String uploadedIdByB;
+        private Long id;
 }

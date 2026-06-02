@@ -49,6 +49,30 @@ public class CommunityGroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(membership);
     }
 
+    // Get pending join requests
+    @GetMapping("/{group_id}/requests")
+    public ResponseEntity<List<GroupMemberResponseDto>> getPendingJoinRequests(@PathVariable("group_id") Long groupId) {
+        return ResponseEntity.ok(groupService.getPendingJoinRequests(groupId));
+    }
+
+    // Approve join request
+    @PatchMapping("/{group_id}/requests/{user_id}/approve")
+    public ResponseEntity<CommunityGroupMember> approveJoinRequest(
+            @PathVariable("group_id") Long groupId,
+            @PathVariable("user_id") Long userId) {
+        CommunityGroupMember membership = groupService.approveJoinRequest(groupId, userId);
+        return ResponseEntity.ok(membership);
+    }
+
+    // Reject join request
+    @DeleteMapping("/{group_id}/requests/{user_id}/reject")
+    public ResponseEntity<Void> rejectJoinRequest(
+            @PathVariable("group_id") Long groupId,
+            @PathVariable("user_id") Long userId) {
+        groupService.rejectJoinRequest(groupId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     // 5. Owner/admin removes a member
     @DeleteMapping("/{group_id}/members/{user_id}")
     public ResponseEntity<Void> removeMember(
@@ -67,6 +91,15 @@ public class CommunityGroupController {
         return ResponseEntity.ok(updatedMember);
     }
 
+    // 6.5. Owner demotes Admin to Member
+    @PatchMapping("/{group_id}/members/{user_id}/demote")
+    public ResponseEntity<CommunityGroupMember> demoteMember(
+            @PathVariable("group_id") Long groupId,
+            @PathVariable("user_id") Long userId) {
+        CommunityGroupMember updatedMember = groupService.demoteMember(groupId, userId);
+        return ResponseEntity.ok(updatedMember);
+    }
+
     // 7. Owner/admin suspends or reactivates a group
     @PatchMapping("/{group_id}/status")
     public ResponseEntity<CommunityGroup> updateGroupStatus(
@@ -81,5 +114,29 @@ public class CommunityGroupController {
     public ResponseEntity<List<PostResponseDto>> getGroupListings(@PathVariable("group_id") Long groupId) {
         List<PostResponseDto> listings = groupService.getGroupListings(groupId);
         return ResponseEntity.ok(listings);
+    }
+
+    // 9. Get all members of a group
+    @GetMapping("/{group_id}/members")
+    public ResponseEntity<List<GroupMemberResponseDto>> getGroupMembers(@PathVariable("group_id") Long groupId) {
+        return ResponseEntity.ok(groupService.getGroupMembers(groupId));
+    }
+
+    // 10. Delete a community group (creator/admin only)
+    @DeleteMapping("/{group_id}")
+    public ResponseEntity<Void> deleteGroup(@PathVariable("group_id") Long groupId) {
+        groupService.deleteGroup(groupId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 11. Update group details (name, banner) (creator/admin only)
+    @PatchMapping("/{group_id}/details")
+    public ResponseEntity<CommunityGroup> updateGroupDetails(
+            @PathVariable("group_id") Long groupId,
+            @RequestBody java.util.Map<String, String> payload) {
+        String newName = payload.get("groupName");
+        String newCoverImage = payload.get("coverImageUrl");
+        CommunityGroup updatedGroup = groupService.updateGroupDetails(groupId, newName, newCoverImage);
+        return ResponseEntity.ok(updatedGroup);
     }
 }

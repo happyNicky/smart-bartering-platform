@@ -5,5 +5,5 @@ public enum RequestStatus {
     CANCELED,
     ACCEPTED,
 
-
+    DECLINED
 }

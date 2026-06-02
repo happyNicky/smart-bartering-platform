@@ -8,8 +8,11 @@ import lombok.Data;
 @Data
 public class SubmitRatingRequest {
 
-    @NotNull
     private Long barterId;
+    
+    private Long cycleBarterId;
+
+    private Long toUserId;
 
     @NotNull
     @Min(1)

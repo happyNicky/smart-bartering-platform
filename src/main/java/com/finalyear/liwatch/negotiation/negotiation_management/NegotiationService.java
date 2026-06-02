@@ -2,6 +2,7 @@ package com.finalyear.liwatch.negotiation.negotiation_management;
 
 import com.finalyear.liwatch.barter.Barter;
 import com.finalyear.liwatch.chat.Chat;
+import com.finalyear.liwatch.chat.chat_managment.chatjpafiles.ChatRepository;
 import com.finalyear.liwatch.negotiation.Negotiation;
 import com.finalyear.liwatch.negotiation.negotiaition_enum.NegotiationStatus;
 import com.finalyear.liwatch.userManagement.model.User;
@@ -16,14 +17,17 @@ public class NegotiationService {
     private final NegotiationRepository negotiationRepository;
     private final UserUtilService userUtilService;
     private final FairValueSuggestionService fairValueSuggestionService;
+    private final ChatRepository chatRepository;
 
     public NegotiationService(
             NegotiationRepository negotiationRepository,
             UserUtilService userUtilService,
-            FairValueSuggestionService fairValueSuggestionService) {
+            FairValueSuggestionService fairValueSuggestionService,
+            ChatRepository chatRepository) {
         this.negotiationRepository = negotiationRepository;
         this.userUtilService = userUtilService;
         this.fairValueSuggestionService = fairValueSuggestionService;
+        this.chatRepository = chatRepository;
     }
 
     public Negotiation createNegotiation(Barter barter){
@@ -45,7 +49,22 @@ public class NegotiationService {
     }
     @Transactional
     public List<Chat> getChatsOfNegotiation(Long id){
-        Negotiation negotiation =getNegotiationById(id);
+        Negotiation negotiation = getNegotiationById(id);
+        User currentUser = userUtilService.getCurrentlyAuthenticatedUser();
+        boolean modified = false;
+        if (negotiation.getMessages() != null) {
+            for (Chat chat : negotiation.getMessages()) {
+                if (chat.getSender() != null && !chat.getSender().getId().equals(currentUser.getId())) {
+                    if (!chat.isRead()) {
+                        chat.setRead(true);
+                        modified = true;
+                    }
+                }
+            }
+        }
+        if (modified) {
+            chatRepository.saveAll(negotiation.getMessages());
+        }
         return negotiation.getMessages();
     }
 
@@ -59,6 +78,20 @@ public class NegotiationService {
         Long userB = negotiation.getBarter().getUserB().getId();
         if (!currentUserId.equals(userA) && !currentUserId.equals(userB)) {
             throw new RuntimeException("Unauthorized access");
+        }
+        boolean modified = false;
+        if (negotiation.getMessages() != null) {
+            for (Chat chat : negotiation.getMessages()) {
+                if (chat.getSender() != null && !chat.getSender().getId().equals(currentUserId)) {
+                    if (!chat.isRead()) {
+                        chat.setRead(true);
+                        modified = true;
+                    }
+                }
+            }
+        }
+        if (modified) {
+            chatRepository.saveAll(negotiation.getMessages());
         }
         fairValueSuggestionService.ensureSuggestion(negotiation);
         return negotiationRepository.save(negotiation);

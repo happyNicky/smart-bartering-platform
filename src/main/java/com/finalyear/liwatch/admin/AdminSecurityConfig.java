@@ -1,11 +1,14 @@
 package com.finalyear.liwatch.admin;
 
+import com.finalyear.liwatch.userManagement.config.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Dedicated security filter chain for /api/admin/** endpoints.
@@ -25,17 +28,26 @@ import org.springframework.security.web.SecurityFilterChain;
 @Order(1)                      // run before the main app filter chain
 public class AdminSecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public AdminSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     @Bean
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         http
             // apply this chain only to admin paths
             .securityMatcher("/api/admin/**")
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().hasRole("ADMIN")
             )
-            // reuse your existing JWT filter — no form login for admin API
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
 }
+

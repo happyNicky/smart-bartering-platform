@@ -33,6 +33,9 @@ public class WebSecurityConfig {
     private final CustomeUserDetailService userDetailService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @org.springframework.beans.factory.annotation.Value("${liwatch.frontend.url}")
+    private String frontendUrl;
+
 
 
 
@@ -51,7 +54,7 @@ public class WebSecurityConfig {
                         request
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/internal/ratings/publish").permitAll()
-                                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify","/api/auth/forgot-password","/api/auth/reset-password","/error").permitAll()
+                                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify","/api/auth/forgot-password","/api/auth/reset-password","/error", "/nego/chat/**").permitAll()
                                 .anyRequest().authenticated()
                 )
 
@@ -85,10 +88,17 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
 
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://127.0.0.1:3000", frontendUrl));
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://*:3000",
+                "http://*.local:3000",
+                frontendUrl
+        ));
 
         configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
 
         configuration.setAllowedHeaders(List.of("*"));

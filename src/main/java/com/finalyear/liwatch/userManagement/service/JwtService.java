@@ -36,7 +36,7 @@ public class JwtService {
     public String generateToken(LoginUserDto user) {
 
         Map<String,Object> claims= new HashMap<>();
-        long oneHourInMillis = 60L * 60 * 1000;
+        long oneHourInMillis = 24L * 60 * 60 * 1000;
         return Jwts
                 .builder()
                 .addClaims(claims)

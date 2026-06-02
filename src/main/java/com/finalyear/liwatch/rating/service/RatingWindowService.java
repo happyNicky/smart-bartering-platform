@@ -84,6 +84,10 @@ public class RatingWindowService {
         return window;
     }
 
+    public java.util.Optional<RatingWindow> findWindowByBarterId(Long barterId) {
+        return ratingWindowRepository.findByBarterId(barterId);
+    }
+
     private void notifyWindowOpened(User user, Long barterId, LocalDateTime deadline) {
         notificationService.createNotification(
                 user.getId(),

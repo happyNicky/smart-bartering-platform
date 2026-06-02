@@ -2,6 +2,7 @@ package com.finalyear.liwatch.admin;
 
 import com.finalyear.liwatch.report.UserReport;
 
+import com.finalyear.liwatch.report.enums.ReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,7 +33,7 @@ public interface AdminReportRepository extends JpaRepository<UserReport, Long> {
             ORDER BY r.createdAt DESC
             """)
     Page<UserReport> searchReports(
-            @Param("status")  String status,
+            @Param("status")  ReportStatus status,
             @Param("keyword") String keyword,
             Pageable pageable
     );

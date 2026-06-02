@@ -4,5 +4,6 @@ public enum Status {
     ACTIVE,
     FLAGGED,
     CLOSED,
+    REMOVED,
 
 }

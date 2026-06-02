@@ -53,6 +53,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //            UserDetails userDetails = userDetailService.loadUserByUsername(username);
             UserDetails userDetails= userDetailService.loadUserByUsername(username);
             if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (!userDetails.isAccountNonLocked()) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"message\": \"Your account has been suspended.\"}");
+                    return;
+                }
+                if (!userDetails.isEnabled()) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"message\": \"Your account is disabled.\"}");
+                    return;
+                }
                 System.out.println("jwt token is valid");
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,

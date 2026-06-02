@@ -16,6 +16,19 @@ public class NotificationDto {
     private String subject;
     private String body;
     private String type;
+    @com.fasterxml.jackson.annotation.JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime sentAt;
+
+    public boolean getIsRead() {
+        return this.isRead;
+    }
+
+    public boolean isRead() {
+        return this.isRead;
+    }
+
+    public void setIsRead(boolean isRead) {
+        this.isRead = isRead;
+    }
 }

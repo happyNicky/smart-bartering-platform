@@ -1,11 +1,14 @@
 package com.finalyear.liwatch.userManagement.controller;
 
+import com.finalyear.liwatch.userManagement.DTO.ChangePasswordDto;
 import com.finalyear.liwatch.userManagement.DTO.LoginUserDto;
 import com.finalyear.liwatch.userManagement.DTO.RegisterUserDto;
 import com.finalyear.liwatch.userManagement.model.User;
 import com.finalyear.liwatch.userManagement.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -58,6 +61,18 @@ public class UserController {
     @GetMapping("/verify")
     public ResponseEntity<?> verify(@RequestParam String token) {
         return userService.emailVarify(token);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody ChangePasswordDto dto) {
+        try {
+            userService.changePassword(userDetails.getUsername(), dto.getCurrentPassword(), dto.getNewPassword());
+            return ResponseEntity.ok("Password updated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
 }

@@ -40,7 +40,7 @@ public class AdminUserResponse {
                 .status(user.getStatus().name())
                 .isVerified(user.isVerified())
                 .enabled(user.isEnabled())
-                .createdAt(user.getCreatedAt());
+                .createdAt(user.getCreatedAt() != null ? user.getCreatedAt() : java.time.LocalDateTime.now());
 
         if (user.getUserProfile() != null) {
             builder

@@ -32,8 +32,12 @@ public class Rating {
     private User toUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "barter_id", nullable = false)
+    @JoinColumn(name = "barter_id")
     private Barter barter;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cycle_barter_id")
+    private com.finalyear.liwatch.cycleswap.model.CycleBarter cycleBarter;
 
     @Column(nullable = false)
     private Integer score;

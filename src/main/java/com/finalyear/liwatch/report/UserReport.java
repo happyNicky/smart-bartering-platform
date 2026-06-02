@@ -21,8 +21,31 @@ public class UserReport {
     private Long reportId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reported_user_id", nullable = false)
-    private User reportedUser;
+    @JoinColumn(name = "reported_user_id")
+    private User reportedUser; // Made nullable for POST/BARTER reports
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reported_post_id")
+    private com.finalyear.liwatch.Post.Post reportedPost;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reported_barter_id")
+    private com.finalyear.liwatch.barter.Barter reportedBarter;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reported_cycle_barter_id")
+    private com.finalyear.liwatch.cycleswap.model.CycleBarter reportedCycleBarter;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false)
+    private com.finalyear.liwatch.report.enums.TargetType targetType = com.finalyear.liwatch.report.enums.TargetType.USER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "issue_type")
+    private com.finalyear.liwatch.report.enums.IssueType issueType;
+
+    @Column(name = "evidence_url")
+    private String evidenceUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_user_id", nullable = false)
